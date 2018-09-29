@@ -3,6 +3,8 @@ package ru.maklas.http;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import utils.ResponseBean;
+import utils.ResponseParseException;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -157,6 +159,25 @@ public class Response {
         printTrace(bos);
         return new String(bos.toByteArray());
     }
+
+    public <T extends ResponseBean> T parse(T bean) throws ResponseParseException {
+        try {
+            bean.parse(this);
+        } catch (Exception e) {
+            throw new ResponseParseException(this, bean, e);
+        }
+        return bean;
+    }
+
+    public <T extends ResponseBean> T parseOrFail(T bean){
+        try {
+            bean.parse(this);
+        } catch (Exception e) {
+            throw new RuntimeException(new ResponseParseException(this, bean, e));
+        }
+        return bean;
+    }
+
 
     public void printTrace(OutputStream out){
         PrintWriter w = new PrintWriter(out);

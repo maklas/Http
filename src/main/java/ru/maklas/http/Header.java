@@ -69,7 +69,7 @@ public class Header extends KeyValuePair {
         public static final Header html = new Header(key, "text/html");
         public static final Header appJson = new Header(key, "application/json");
         public static final Header appJsonOrJS = new Header(key, "application/json, text/javascript, */*; q=0.01");
-        public static final Header likeMaklasChrome = new Header(key, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+        public static final Header textAppImage = new Header(key, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
     }
 
     //
