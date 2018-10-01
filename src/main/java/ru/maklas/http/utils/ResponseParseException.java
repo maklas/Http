@@ -55,6 +55,7 @@ public class ResponseParseException extends Exception {
 
     @Override
     public void printStackTrace(PrintStream s) {
+        super.printStackTrace(s);
         printStackTrace(new PrintWriter(s));
     }
 
