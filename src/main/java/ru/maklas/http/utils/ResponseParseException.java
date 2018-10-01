@@ -50,9 +50,7 @@ public class ResponseParseException extends Exception {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         response.printTrace(bos);
         w.println(new String(bos.toByteArray()));
-        try {
-            bos.flush();
-        } catch (IOException ignore) {}
+        w.flush();
     }
 
     @Override
