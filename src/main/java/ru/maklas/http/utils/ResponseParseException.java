@@ -1,4 +1,4 @@
-package utils;
+package ru.maklas.http.utils;
 
 import ru.maklas.http.Response;
 

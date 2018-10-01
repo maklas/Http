@@ -3,8 +3,8 @@ package ru.maklas.http;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import utils.ResponseBean;
-import utils.ResponseParseException;
+import ru.maklas.http.utils.ResponseBean;
+import ru.maklas.http.utils.ResponseParseException;
 
 import java.io.*;
 import java.net.HttpURLConnection;
