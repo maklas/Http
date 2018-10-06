@@ -85,4 +85,14 @@ public class Http {
         Request.defaultConnectTimeOut = connectTimeOutMs;
         Request.defaultReadTimeOut = readTimeOutMs;
     }
+
+    public static boolean setDnsCacheTTL(int seconds){
+        try {
+            java.security.Security.setProperty("networkaddress.cache.ttl", String.valueOf(seconds));
+            return true;
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
