@@ -110,7 +110,8 @@ public class Response {
                 try {
                     reader = new BufferedReader(new InputStreamReader(javaCon.getErrorStream(), Charset.forName("UTF-8")));
                 } catch (Exception e1) {
-                    fullResponse = ExceptionUtils.getStackTrace(e1);
+                    fullResponseUnescaped = ExceptionUtils.getStackTrace(e1);
+                    fullResponse = fullResponseUnescaped;
                     return fullResponse;
                 }
             }
