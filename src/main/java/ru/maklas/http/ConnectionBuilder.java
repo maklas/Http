@@ -157,6 +157,17 @@ public class ConnectionBuilder {
     }
 
     /**
+     * Adds headers to request
+     * @see Header
+     */
+    public ConnectionBuilder headers(Header... headers){
+        for (Header header : headers) {
+            this.headers.add(header);
+        }
+        return this;
+    }
+
+    /**
      * If enabled, adds Host header from url address. True by default.
      */
     public ConnectionBuilder dontAddHostHeaderAuto(){
