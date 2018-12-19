@@ -28,7 +28,7 @@ public class Response {
     private boolean errorStreamUsed;
 
 
-    public Response(HttpURLConnection javaCon, URL url, int msToConnect, Request request) throws IOException {
+    public Response(HttpURLConnection javaCon, URL url, int msToConnect, Request request, HttpCallback callback) throws IOException {
         this.javaCon = javaCon;
         requestUrl = url;
         this.msToConnect = msToConnect;
@@ -40,6 +40,7 @@ public class Response {
             cookieChangeList = headers.updateCookiesIfChanged(request.getBuilder().getAssignedCookieStore());
         _getBody();
         javaCon.disconnect();
+        if (callback != null) callback.finished(this);
     }
 
     public int getResponseTime() {

@@ -54,38 +54,54 @@ public class Request {
         return this;
     }
 
-    private Response _send() throws ConnectionException {
+    private Response _send(HttpCallback callback) throws ConnectionException {
+        if (callback != null) callback.start(this);
         if (output != null && !Http.GET.equals(method)){
                 try {
                     DataOutputStream os = new DataOutputStream(javaCon.getOutputStream());
                     os.write(output);
                     os.flush();
                     os.close();
+                    if (callback != null) callback.wroteBody();
                 } catch (IOException e) {
-                    throw new ConnectionException(ConnectionException.Type.IO, e, getBuilder(), this);
+                    ConnectionException ce = new ConnectionException(ConnectionException.Type.IO, e, getBuilder(), this);
+                    if (callback != null) callback.interrupted(ce);
+                    throw ce;
                 }
             }
+            if (callback != null) callback.connecting();
         long before = System.currentTimeMillis();
         try {
             javaCon.connect();
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException){
-                throw new ConnectionException(ConnectionException.Type.TIME_OUT, e, getBuilder(), this);
+                ConnectionException ce = new ConnectionException(ConnectionException.Type.TIME_OUT, e, getBuilder(), this);
+                if (callback != null) callback.interrupted(ce);
+                throw ce;
             } else if (e instanceof UnknownHostException){
-                throw new ConnectionException(ConnectionException.Type.UNKNOWN_ADDRESS, e, getBuilder(), this);
+                ConnectionException ce = new ConnectionException(ConnectionException.Type.UNKNOWN_ADDRESS, e, getBuilder(), this);
+                if (callback != null) callback.interrupted(ce);
+                throw ce;
             } else if (e instanceof SSLHandshakeException){
-                throw new ConnectionException(ConnectionException.Type.NOT_SSL, e, getBuilder(), this);
+                ConnectionException ce = new ConnectionException(ConnectionException.Type.NOT_SSL, e, getBuilder(), this);
+                if (callback != null) callback.interrupted(ce);
+                throw ce;
             } else {
-                throw new ConnectionException(ConnectionException.Type.CONNECTION_ERROR, e, getBuilder(), this);
+                ConnectionException ce = new ConnectionException(ConnectionException.Type.CONNECTION_ERROR, e, getBuilder(), this);
+                if (callback != null) callback.interrupted(ce);
+                throw ce;
             }
         }
-        Response response = null;
+        Response response;
         try {
-            javaCon.getResponseCode();
+            int responseCode = javaCon.getResponseCode();
             long ttc = System.currentTimeMillis() - before;
-            response = new Response(javaCon, url, (int) ttc, this);
+            if (callback != null) callback.connected(responseCode);
+            response = new Response(javaCon, url, (int) ttc, this, callback);
         } catch (IOException e) {
-            throw new ConnectionException(ConnectionException.Type.CONNECTION_ERROR, e, getBuilder(), this);
+            ConnectionException ce = new ConnectionException(ConnectionException.Type.CONNECTION_ERROR, e, getBuilder(), this);
+            if (callback != null) callback.interrupted(ce);
+            throw ce;
         }
         return response;
     }
@@ -93,19 +109,31 @@ public class Request {
     public Response send() throws ConnectionException {
         javaCon.setConnectTimeout(defaultConnectTimeOut);
         javaCon.setReadTimeout(defaultReadTimeOut);
-        return _send();
+        return _send(null);
+    }
+
+    public Response send(HttpCallback callback) throws ConnectionException {
+        javaCon.setConnectTimeout(defaultConnectTimeOut);
+        javaCon.setReadTimeout(defaultReadTimeOut);
+        return _send(callback);
     }
 
     public Response send(int timeOut) throws ConnectionException {
         javaCon.setConnectTimeout(timeOut);
         javaCon.setReadTimeout(timeOut);
-        return _send();
+        return _send(null);
     }
 
     public Response send(int connectTimeOut, int readTimeOut) throws ConnectionException {
         javaCon.setConnectTimeout(connectTimeOut);
         javaCon.setReadTimeout(readTimeOut);
-        return _send();
+        return _send(null);
+    }
+
+    public Response send(int connectTimeOut, int readTimeOut, HttpCallback callback) throws ConnectionException {
+        javaCon.setConnectTimeout(connectTimeOut);
+        javaCon.setReadTimeout(readTimeOut);
+        return _send(callback);
     }
 
     public URL getRequestUrl() {
