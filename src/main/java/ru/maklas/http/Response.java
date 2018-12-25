@@ -26,6 +26,7 @@ public class Response {
     private String responseMessage;
     private CookieChangeList cookieChangeList;
     private boolean errorStreamUsed;
+    private Exception bodyException;
 
 
     public Response(HttpURLConnection javaCon, URL url, int msToConnect, Request request, HttpCallback callback) throws IOException {
@@ -75,6 +76,10 @@ public class Response {
         return javaCon;
     }
 
+    public Exception getBodyException() {
+        return bodyException;
+    }
+
     public ResponseHeaders getHeaders() {
         if (headerCache == null){
             headerCache = new ResponseHeaders(javaCon.getHeaderFields());
@@ -108,11 +113,13 @@ public class Response {
                 reader = new BufferedReader(_getReader(Charset.forName("UTF-8")));
             } catch (Exception e) {
                 errorStreamUsed = true;
+                bodyException = e;
                 try {
-                    reader = new BufferedReader(new InputStreamReader(javaCon.getErrorStream(), Charset.forName("UTF-8")));
+                    reader = new BufferedReader(_getErrorReader(Charset.forName("UTF-8")));
                 } catch (Exception e1) {
-                    fullResponseUnescaped = ExceptionUtils.getStackTrace(e1);
-                    fullResponse = fullResponseUnescaped;
+                    fullResponseUnescaped = "";
+                    fullResponse = "";
+                    bodyException = e1;
                     return fullResponse;
                 }
             }
@@ -144,8 +151,21 @@ public class Response {
         return inputStream;
     }
 
+    private InputStream _getErrorInputStream() throws IOException {
+        InputStream inputStream = javaCon.getErrorStream();
+        Header contentEncodingHeader = getHeaders().getHeader(Header.ContentEncoding.key);
+        if (contentEncodingHeader != null && StringUtils.containsIgnoreCase(contentEncodingHeader.value, "gzip")){
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        return inputStream;
+    }
+
     private InputStreamReader _getReader() throws IOException {
         return new InputStreamReader(_getInputStream());
+    }
+
+    private InputStreamReader _getErrorReader(Charset charset) throws IOException {
+        return new InputStreamReader(_getErrorInputStream(), charset);
     }
 
     private InputStreamReader _getReader(Charset charset) throws IOException {
