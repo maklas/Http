@@ -2,11 +2,13 @@ package ru.maklas.http;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import ru.maklas.http.utils.ResponseBean;
 import ru.maklas.http.utils.ResponseParseException;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -97,6 +99,42 @@ public class Response {
      */
     public boolean isError() {
         return errorStreamUsed;
+    }
+
+    /**
+     * Returns true if this is a redirect page. Use {@link #getRedirectUrl()} to get redirection path;
+     */
+    public boolean isRedirect(){
+        if (getResponseCode() == 200){
+            return false;
+        }
+        Header locationHeader = getHeaders().getHeader(Header.Location.key);
+        if (locationHeader != null){
+            try {
+                new URL(locationHeader.value);
+            } catch (MalformedURLException e) {
+                return false;
+            }
+            return true;
+        }
+
+        int[] redirectionCodes = {301, 302, 303, 307, 308};
+        for (int redirectionCode : redirectionCodes) {
+            if (getResponseCode() == redirectionCode){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Redirection URL. Might be null if not found.
+     */
+    @Nullable
+    public String getRedirectUrl(){
+        Header locationHeader = getHeaders().getHeader(Header.Location.key);
+        return locationHeader == null ? null : locationHeader.value;
     }
 
     public CookieChangeList getCookieChangeList() {
