@@ -1,19 +1,28 @@
 package ru.maklas.http;
 
+import sun.net.www.MessageHeader;
+import sun.net.www.protocol.https.DelegateHttpsURLConnection;
+import sun.net.www.protocol.https.HttpsURLConnectionImpl;
+
 import javax.net.ssl.SSLHandshakeException;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Request {
 
     public static int defaultConnectTimeOut = 10_000;
     public static int defaultReadTimeOut = 20_000;
+    public static boolean fetchJavaHeaders = false;
     private HttpURLConnection javaCon;
     private final URL url;
     private final String method;
@@ -44,14 +53,6 @@ public class Request {
     public String getSendingBodyAsString() {
         if (output == null) return "";
         return new String(output);
-    }
-
-    /**
-     * Only before connecting!!!
-     */
-    public Request enableOutput(){
-        javaCon.setDoOutput(true);
-        return this;
     }
 
     private Response _send(HttpCallback callback) throws ConnectionException {
@@ -95,6 +96,9 @@ public class Request {
         Response response;
         try {
             int responseCode = javaCon.getResponseCode();
+            if (fetchJavaHeaders){
+                appendJavaHeaders();
+            }
             long ttc = System.currentTimeMillis() - before;
             if (callback != null) callback.connected(responseCode);
             response = new Response(javaCon, url, (int) ttc, this, callback);
@@ -156,5 +160,49 @@ public class Request {
 
     public HttpURLConnection getJavaCon() {
         return javaCon;
+    }
+
+    private void appendJavaHeaders(){
+        Map<String, List<String>> javaRequests = getJavaRequests();
+        for (Map.Entry<String, List<String>> e : javaRequests.entrySet()) {
+            if (e != null && e.getKey() != null){
+                if (reqHeaders.getHeader(e.getKey()) == null){
+                    if (e.getValue() != null && e.getValue().size() > 0 && e.getValue().get(0) != null) {
+                        reqHeaders.add(new Header(e.getKey(), e.getValue().get(0)));
+                    }
+                }
+            }
+        }
+    }
+
+    private Map<String, List<String>> getJavaRequests(){
+        MessageHeader requests = null;
+
+        try {
+            if (javaCon instanceof sun.net.www.protocol.http.HttpURLConnection){
+                Field requestsField = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
+                requestsField.setAccessible(true);
+                requests = (MessageHeader) requestsField.get(javaCon);
+            } else if (javaCon instanceof sun.net.www.protocol.https.HttpsURLConnectionImpl){
+                Field delegateField = HttpsURLConnectionImpl.class.getDeclaredField("delegate");
+                delegateField.setAccessible(true);
+                DelegateHttpsURLConnection delegate = (DelegateHttpsURLConnection) delegateField.get(javaCon);
+                Field requestsField = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
+                requestsField.setAccessible(true);
+                requests = (MessageHeader) requestsField.get(delegate);
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+        Map<String, List<String>> headers;
+
+        if (requests != null){
+            headers = requests.getHeaders();
+        } else {
+            headers = new HashMap<>();
+        }
+
+        return headers;
     }
 }

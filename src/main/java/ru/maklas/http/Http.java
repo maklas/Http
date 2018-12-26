@@ -97,6 +97,17 @@ public class Http {
         Response.performUnescape = enabled;
     }
 
+    /**
+     * Disabled by default. If enabled, appends headers which are added by underlying Java implementation
+     * to {@link Request} after {@link Request#send()} was executed. For example, by default, if User-Agent header is not specified in request,
+     * It's automatically added by HttpUrlConnection just before executing request. These headers are not visible until connection is established
+     * and requires reflection for access, which might add significant overhead.
+     * Useful for debugging when you want to know what's actually sent to the host, including Java's headers.
+     */
+    public static void fetchJavaHeaders(boolean enabled){
+        Request.fetchJavaHeaders = enabled;
+    }
+
     public static boolean setDnsCacheTTL(int seconds){
         try {
             java.security.Security.setProperty("networkaddress.cache.ttl", String.valueOf(seconds));

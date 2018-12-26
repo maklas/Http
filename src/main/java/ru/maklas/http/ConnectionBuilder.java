@@ -21,7 +21,6 @@ public class ConnectionBuilder {
     private boolean useCacheChanged = false;
     private boolean useCache = false;
     private byte[] output = null;
-    private boolean tryHostHeader = true;
     private boolean built = false;
     private CookieStore assignedCookieStore;
 
@@ -45,7 +44,6 @@ public class ConnectionBuilder {
         cb.followRedirect = followRedirect;
         cb.useCacheChanged = useCacheChanged;
         cb.useCache = useCache;
-        cb.tryHostHeader = tryHostHeader;
         cb.built = built;
         if (output != null) {
             cb.output = new byte[output.length];
@@ -164,14 +162,6 @@ public class ConnectionBuilder {
         for (Header header : headers) {
             this.headers.add(header);
         }
-        return this;
-    }
-
-    /**
-     * If enabled, adds Host header from url address. True by default.
-     */
-    public ConnectionBuilder dontAddHostHeaderAuto(){
-        this.tryHostHeader = false;
         return this;
     }
 
@@ -375,18 +365,10 @@ public class ConnectionBuilder {
         if (useCacheChanged) javaCon.setUseCaches(useCache);
         javaCon.setDoOutput(output != null);
 
-        if (tryHostHeader) addHostHeader();
         for (Header header : headers) {
             javaCon.addRequestProperty(header.key, header.value);
         }
         return new Request(javaCon, url, method, output, headers, this);
-    }
-
-    private void addHostHeader() {
-        for (Header header : headers) {
-            if (header.key.equals(Header.Host.key)) return;
-        }
-        headers.add(Header.Host.fromUrl(getUrlAsString()));
     }
 
 
