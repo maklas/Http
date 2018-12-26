@@ -2,7 +2,6 @@ package ru.maklas.http;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import ru.maklas.http.utils.ResponseBean;
 import ru.maklas.http.utils.ResponseParseException;
 
@@ -11,9 +10,13 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
 
 public class Response {
+
+    private static final Charset utf8 = Charset.forName("UTF-8");
 
     private final HttpURLConnection javaCon;
     private final URL requestUrl;
@@ -27,6 +30,7 @@ public class Response {
     private CookieChangeList cookieChangeList;
     private boolean errorStreamUsed;
     private Exception bodyException;
+    private Charset charset;
 
 
     public Response(HttpURLConnection javaCon, URL url, int msToConnect, Request request, HttpCallback callback) throws IOException {
@@ -110,12 +114,12 @@ public class Response {
         if (fullResponse == null) {
             BufferedReader reader;
             try {
-                reader = new BufferedReader(_getReader(Charset.forName("UTF-8")));
+                reader = new BufferedReader(_getReader(getCharset()));
             } catch (Exception e) {
                 errorStreamUsed = true;
                 bodyException = e;
                 try {
-                    reader = new BufferedReader(_getErrorReader(Charset.forName("UTF-8")));
+                    reader = new BufferedReader(_getErrorReader(getCharset()));
                 } catch (Exception e1) {
                     fullResponseUnescaped = "";
                     fullResponse = "";
@@ -132,7 +136,12 @@ public class Response {
                 s = reader.readLine();
             }
             fullResponseUnescaped = builder.toString();
-            fullResponse = unescape(fullResponseUnescaped);
+            try {
+                fullResponse = unescape(fullResponseUnescaped);
+            } catch (Exception e) {
+                e.printStackTrace();
+                fullResponse = fullResponseUnescaped;
+            }
             reader.close();
         }
         return fullResponse;
@@ -143,25 +152,42 @@ public class Response {
     }
 
     private InputStream _getInputStream() throws IOException {
-        InputStream inputStream = javaCon.getInputStream();
-        Header contentEncodingHeader = getHeaders().getHeader(Header.ContentEncoding.key);
-        if (contentEncodingHeader != null && StringUtils.containsIgnoreCase(contentEncodingHeader.value, "gzip")){
-            inputStream = new GZIPInputStream(inputStream);
-        }
-        return inputStream;
+        return wrapStream(javaCon.getInputStream());
     }
 
     private InputStream _getErrorInputStream() throws IOException {
-        InputStream inputStream = javaCon.getErrorStream();
-        Header contentEncodingHeader = getHeaders().getHeader(Header.ContentEncoding.key);
-        if (contentEncodingHeader != null && StringUtils.containsIgnoreCase(contentEncodingHeader.value, "gzip")){
-            inputStream = new GZIPInputStream(inputStream);
-        }
-        return inputStream;
+        return wrapStream(javaCon.getErrorStream());
     }
 
-    private InputStreamReader _getReader() throws IOException {
-        return new InputStreamReader(_getInputStream());
+    private Charset getCharset(){
+        if (charset == null) {
+            charset = utf8;
+            Header contentType = getHeaders().getHeader(Header.ContentType.key);
+            if (contentType != null) {
+                try {
+                    String afterCharset = StringUtils.substringAfter(contentType.value, "charset=");
+                    String responseCharset = StringUtils.substringBefore(afterCharset, ";");
+                    charset = Charset.forName(responseCharset);
+                } catch (Exception ignore) {}
+            }
+        }
+        return charset;
+    }
+
+    private InputStream wrapStream(InputStream is) throws IOException {
+        Header contentEncodingHeader = getHeaders().getHeader(Header.ContentEncoding.key);
+        if (contentEncodingHeader == null) return is;
+        String[] encodings = StringUtils.split(contentEncodingHeader.value, ',');
+        for (String encoding : encodings) {
+            if (StringUtils.containsIgnoreCase(encoding, "gzip")){
+                is = new GZIPInputStream(is);
+            } else if (StringUtils.containsIgnoreCase(encoding, "deflate")){
+                is = new DeflaterInputStream(is, new Deflater());
+            } else if (!StringUtils.containsIgnoreCase(encoding, "identity")){
+                System.err.println("Unsupported encoding '" + StringUtils.trim(encoding) + "'");
+            }
+        }
+        return is;
     }
 
     private InputStreamReader _getErrorReader(Charset charset) throws IOException {
@@ -229,11 +255,16 @@ public class Response {
             w.println("Time: " + getResponseTime() + " ms");
             w.println("Code: " + responseCode + " (" + Http.getResponseCodeMeaning(responseCode, "???") + ")");
             w.println("Message: " + responseMessage);
-            w.println(getHeaders());
+            for (Header header : getHeaders()) {
+                w.print("  ");
+                w.println(header);
+            }
             w.println();
             w.println("------- BODY -------");
             w.println(fullResponse);
             w.println();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             w.flush();
         }
