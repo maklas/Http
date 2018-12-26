@@ -86,6 +86,17 @@ public class Http {
         Request.defaultReadTimeOut = readTimeOutMs;
     }
 
+    /**
+     * Enabled by default. When enabled, Response.getBody() and Response.getEscapedBody() might have different content.
+     * Escaping is done via {@link org.apache.commons.lang3.StringEscapeUtils#escapeJava(String)}.
+     * Escaping usually produce a more human-readable result.
+     * If you don't need the functionality it can be disabled in favor of speed and consuming less memory as
+     * 2 versions of a response are present when this feature enabled. Both escaped and unescaped Strings
+     */
+    public static void enableUnescaping(boolean enabled){
+        Response.performUnescape = enabled;
+    }
+
     public static boolean setDnsCacheTTL(int seconds){
         try {
             java.security.Security.setProperty("networkaddress.cache.ttl", String.valueOf(seconds));

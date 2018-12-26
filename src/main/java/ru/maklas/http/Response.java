@@ -17,6 +17,7 @@ import java.util.zip.GZIPInputStream;
 public class Response {
 
     private static final Charset utf8 = Charset.forName("UTF-8");
+    static boolean performUnescape = true;
 
     private final HttpURLConnection javaCon;
     private final URL requestUrl;
@@ -24,7 +25,7 @@ public class Response {
     private final Request request;
     private ResponseHeaders headerCache;
     private String fullResponse;
-    private String fullResponseUnescaped;
+    private String fullResponseEscaped;
     private int responseCode;
     private String responseMessage;
     private CookieChangeList cookieChangeList;
@@ -107,7 +108,7 @@ public class Response {
     }
 
     public String getEscapedBody(){
-        return fullResponseUnescaped;
+        return fullResponseEscaped;
     }
 
     private String _getBody() throws IOException {
@@ -121,7 +122,7 @@ public class Response {
                 try {
                     reader = new BufferedReader(_getErrorReader(getCharset()));
                 } catch (Exception e1) {
-                    fullResponseUnescaped = "";
+                    fullResponseEscaped = "";
                     fullResponse = "";
                     bodyException = e1;
                     return fullResponse;
@@ -135,12 +136,16 @@ public class Response {
                 builder.append("\n");
                 s = reader.readLine();
             }
-            fullResponseUnescaped = builder.toString();
-            try {
-                fullResponse = unescape(fullResponseUnescaped);
-            } catch (Exception e) {
-                e.printStackTrace();
-                fullResponse = fullResponseUnescaped;
+            fullResponseEscaped = builder.toString();
+            if (performUnescape) {
+                try {
+                    fullResponse = unescape(fullResponseEscaped);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fullResponse = fullResponseEscaped;
+                }
+            } else {
+                fullResponse = fullResponseEscaped;
             }
             reader.close();
         }
