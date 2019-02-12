@@ -17,19 +17,13 @@ public interface HttpCallback {
      */
     void start(Request request);
 
-    /**
-     * Called after request's body was written to the Http request and only if it's POST method with body.
-     */
+    /** Called after request's body was written to the Http request and only if it's POST method with body. **/
     void wroteBody();
 
-    /**
-     * Called before attempting to execute HTTP request.
-     */
+    /** Called before attempting to execute HTTP request. **/
     void connecting();
 
-    /**
-     * Called after establishing connection with server and receiving Http response code.
-     */
+    /** Called after establishing connection with server and receiving Http response code. **/
     void connected(int responseCode);
 
     /**

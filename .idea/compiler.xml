@@ -10,8 +10,5 @@
         <module name="ru.maklas.http" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="ru.maklas.http" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>

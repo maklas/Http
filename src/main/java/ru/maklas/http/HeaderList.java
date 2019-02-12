@@ -17,8 +17,9 @@ public class HeaderList implements Iterable<Header> {
         this.headers.addAll(headers.headers);
     }
 
-    public void add(Header header) {
+    public HeaderList add(Header header) {
         headers.add(header);
+        return this;
     }
 
     public Header getHeader(String key){

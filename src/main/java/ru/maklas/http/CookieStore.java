@@ -45,16 +45,12 @@ public class CookieStore implements Iterable<Cookie>{
         return cookies.iterator();
     }
 
-    /**
-     * @return null if there is no cookie with this name
-     */
+    /** @return null if there is no cookie with this name **/
     public String getCookie(String key){
         return getCookie(key, null);
     }
 
-    /**
-     * @return default value if there is no cookie with this name
-     */
+    /** @return default value if there is no cookie with this name **/
     public String getCookie(String key, String def){
         for (Cookie cookie : cookies) {
             if (cookie.getKey().equals(key)){
@@ -77,9 +73,7 @@ public class CookieStore implements Iterable<Cookie>{
         }
     }
 
-    /**
-     * @return null if there was no cookie with the same key. Otherwise returns old cookie value
-     */
+    /** @return null if there was no cookie with the same key. Otherwise returns old cookie value **/
     public String remove(String key){
         Cookie toRemove = null;
 
@@ -95,9 +89,7 @@ public class CookieStore implements Iterable<Cookie>{
         return toRemove.getValue();
     }
 
-    /**
-     * @return null if there is no cookies!!!
-     */
+    /** @return null if there is no cookies!!! **/
     public Header toHeader(){
         if (cookies.size == 0) return null;
         return new Header(Cookie.headerKey, toHeaderString());

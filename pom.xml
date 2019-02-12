@@ -32,8 +32,8 @@
         <!--JetBrains Annotations-->
         <dependency>
             <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>16.0.2</version>
+            <artifactId>annotations-java5</artifactId>
+            <version>15.0</version>
         </dependency>
     </dependencies>
 

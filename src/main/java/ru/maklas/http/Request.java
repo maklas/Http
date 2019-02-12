@@ -30,9 +30,7 @@ public class Request {
     private final HeaderList reqHeaders;
     private final ConnectionBuilder builder;
 
-    /**
-     * Already connected!
-     */
+    /** Already connected! **/
     Request(HttpURLConnection javaCon, URL url, String method, byte[] output, HeaderList reqHeaders, ConnectionBuilder builder) {
         this.javaCon = javaCon;
         this.url = url;

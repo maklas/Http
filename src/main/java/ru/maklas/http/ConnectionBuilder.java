@@ -24,7 +24,9 @@ public class ConnectionBuilder {
     private boolean built = false;
     private CookieStore assignedCookieStore;
 
+    /** Creates new Connection builder without default headers specified.**/
     public ConnectionBuilder() {
+
     }
 
     public ConnectionBuilder cpy(){
@@ -52,59 +54,49 @@ public class ConnectionBuilder {
         cb.assignedCookieStore = assignedCookieStore;
     }
 
-    /**
-     * new ConnectionBuilder starting with get method request
-     */
+    /** new ConnectionBuilder starting with get method request **/
     public static ConnectionBuilder get(){
         return new ConnectionBuilder()
+                .headers(defaultHeaders.headers)
                 .method(Http.GET);
     }
 
-    /**
-     * new ConnectionBuilder starting with pot method request
-     */
+    /** new ConnectionBuilder starting with POST method request and defaultHeaders included **/
     public static ConnectionBuilder post(){
         return new ConnectionBuilder()
+                .headers(defaultHeaders.headers)
                 .method(Http.POST);
     }
 
-    /**
-     * new ConnectionBuilder starting with get method request
-     */
+    /** new ConnectionBuilder starting with get method request **/
     public static ConnectionBuilder get(String url){
         return new ConnectionBuilder()
                 .method(Http.GET)
+                .headers(defaultHeaders.headers)
                 .url(url);
     }
 
-    /**
-     * new ConnectionBuilder starting with pot method request
-     */
+    /** new ConnectionBuilder starting with pot method request **/
     public static ConnectionBuilder post(String url){
         return new ConnectionBuilder()
                 .method(Http.POST)
+                .headers(defaultHeaders.headers)
                 .url(url);
     }
 
-    /**
-     * Specify connection address. Remember to write it with http:// or https://
-     */
+    /** Specify connection address. Remember to write it with http:// or https:// **/
     public ConnectionBuilder url(String url){
         this.stringUrl = url;
         return this;
     }
 
-    /**
-     * Specify connection address.
-     */
+    /** Specify connection address. **/
     public ConnectionBuilder url(URL url){
         this.url = url;
         return this;
     }
 
-    /**
-     * @see Http
-     */
+    /** @see Http **/
     public ConnectionBuilder method(@MagicConstant(valuesFromClass = Http.class) String httpMethod){
         this.method = httpMethod;
         return this;
@@ -174,42 +166,32 @@ public class ConnectionBuilder {
         return this;
     }
 
-    /**
-     * Adds a cookie to Cookie header of request.
-     */
+    /** Adds a cookie to Cookie header of request. **/
     public ConnectionBuilder addcookie(String key, String value){
         this.cookies.setCookie(key, value);
         return this;
     }
 
-    /**
-     * Do this requesst using proxy
-     */
+    /** Do this requesst using proxy **/
     public ConnectionBuilder usingProxy(@Nullable ProxyData data){
         this.proxy = data;
         return this;
     }
 
-    /**
-     * Do this requesst using proxy
-     */
+    /** Do this requesst using proxy **/
     public ConnectionBuilder usingProxy(String address, int port){
         this.proxy = new ProxyData(address, port);
         return this;
     }
 
-    /**
-     * Whether or not to allow redirect
-     */
+    /** Whether or not to allow redirect **/
     public ConnectionBuilder allowRedirect(boolean allow){
         this.allowRedirectChanged = true;
         this.followRedirect = allow;
         return this;
     }
 
-    /**
-     * @see URLConnection#setUseCaches(boolean)
-     */
+    /** @see URLConnection#setUseCaches(boolean) **/
     public ConnectionBuilder cache(boolean enabled){
         this.useCacheChanged = true;
         this.useCache = enabled;
@@ -331,9 +313,7 @@ public class ConnectionBuilder {
         return this;
     }
 
-    /**
-     * Whether this builder was already used. Warning! No builder should be reused
-     */
+    /** Whether this builder was already used. Warning! No builder should be reused **/
     public boolean isBuilt() {
         return built;
     }
@@ -455,5 +435,10 @@ public class ConnectionBuilder {
 
     CookieStore getAssignedCookieStore() {
         return assignedCookieStore;
+    }
+
+    private static final MutableHeaderList defaultHeaders = new MutableHeaderList();
+    public static MutableHeaderList getDefaultHeaderList(){
+        return defaultHeaders;
     }
 }

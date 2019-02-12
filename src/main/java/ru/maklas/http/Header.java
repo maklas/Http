@@ -10,9 +10,7 @@ public class Header extends KeyValuePair {
         super(key, value);
     }
 
-    /**
-     * @return new Header instance with the same key, but changed value
-     */
+    /** @return new Header instance with the same key, but changed value **/
     public Header withValue(String value){
         return new Header(key, value);
     }

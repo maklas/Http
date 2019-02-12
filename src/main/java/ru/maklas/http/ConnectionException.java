@@ -14,39 +14,25 @@ public class ConnectionException extends Exception {
 
     public enum Type{
 
-        /**
-         * Thrown after attempt to reuse builder and call build() twice. Contains no cause.
-         */
+        /** Thrown after attempt to reuse builder and call build() twice. Contains no cause. **/
         USED,
 
-        /**
-         * Exception caused by using wrong http method or not using one
-         */
+        /** Exception caused by using wrong http method or not using one **/
         BAD_PROTOCOL,
 
-        /**
-         * MalformedURLException wrong link that doesn't include http:// or https://
-         */
+        /** MalformedURLException wrong link that doesn't include http:// or https:// **/
         BAD_URL,
 
-        /**
-         * Something wrong with access controll. Should not happen
-         */
+        /** Something wrong with access controll. Should not happen **/
         IO,
 
-        /**
-         * Nobody anwered for too long
-         */
+        /** Nobody anwered for too long **/
         TIME_OUT,
 
-        /**
-         * Guess that target was not found. dns didn't resolve | no internet | bad address
-         */
+        /** Guess that target was not found. dns didn't resolve | no internet | bad address **/
         UNKNOWN_ADDRESS,
 
-        /**
-         * Attempted to connect via HTTPS, but site only accept http
-         */
+        /** Attempted to connect via HTTPS, but site only accept http **/
         NOT_SSL,
 
         /**

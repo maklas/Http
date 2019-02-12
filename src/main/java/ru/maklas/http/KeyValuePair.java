@@ -1,8 +1,6 @@
 package ru.maklas.http;
 
-/**
- * Immutable key-value pair
- */
+/** Immutable key-value pair **/
 public class KeyValuePair {
 
     public final String key;

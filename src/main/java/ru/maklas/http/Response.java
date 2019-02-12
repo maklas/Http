@@ -94,16 +94,12 @@ public class Response {
         return headerCache;
     }
 
-    /**
-     * If true, error stream was used to fetch responseData
-     */
+    /** If true, error stream was used to fetch responseData **/
     public boolean isError() {
         return errorStreamUsed;
     }
 
-    /**
-     * Returns true if this is a redirect page. Use {@link #getRedirectUrl()} to get redirection path;
-     */
+    /** Returns true if this is a redirect page. Use {@link #getRedirectUrl()} to get redirection path; **/
     public boolean isRedirect(){
         if (getResponseCode() == 200){
             return false;
@@ -128,9 +124,7 @@ public class Response {
         return false;
     }
 
-    /**
-     * Redirection URL. Might be null if not found.
-     */
+    /** Redirection URL. Might be null if not found. **/
     @Nullable
     public String getRedirectUrl(){
         Header locationHeader = getHeaders().getHeader(Header.Location.key);

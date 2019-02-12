@@ -2,9 +2,7 @@ package ru.maklas.http;
 
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Cookie is considered to be deleted if it's value was set to empty string or null or 'false' or 'deleted'.
- */
+/** Cookie is considered to be deleted if it's value was set to empty string or null or 'false' or 'deleted'. **/
 public class Cookie {
 
     public static final String headerKey = "Cookie";

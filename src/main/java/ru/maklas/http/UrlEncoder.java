@@ -74,9 +74,7 @@ public class UrlEncoder {
     }
 
 
-    /**
-     *  Кодирует по правилам x-www-form-urlencoded документации {@link URLEncoder}
-     */
+    /**  Кодирует по правилам x-www-form-urlencoded документации {@link URLEncoder} **/
     public static String encodeJavaUrl(String s) {
         try {
             return URLEncoder.encode(s, "UTF-8");
@@ -84,9 +82,7 @@ public class UrlEncoder {
         return s;
     }
 
-    /**
-     * Одноимённый метод в js. Кодирует прямо как там
-     */
+    /** Одноимённый метод в js. Кодирует прямо как там **/
     public static String encodeURIComponent(String s){
         try {
             return URLEncoder.encode(s, "UTF-8")
@@ -100,9 +96,7 @@ public class UrlEncoder {
         return s;
     }
 
-    /**
-     *  Кодирует по правилам x-www-form-urlencoded документации Wikipedia
-     */
+    /**  Кодирует по правилам x-www-form-urlencoded документации Wikipedia **/
     public static String encodeURIComponentPlus(String s){
         try {
             return URLEncoder.encode(s, "UTF-8")
