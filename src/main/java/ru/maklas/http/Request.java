@@ -182,12 +182,19 @@ public class Request {
                 requestsField.setAccessible(true);
                 requests = (MessageHeader) requestsField.get(javaCon);
             } else if (javaCon instanceof sun.net.www.protocol.https.HttpsURLConnectionImpl){
-                Field delegateField = HttpsURLConnectionImpl.class.getDeclaredField("delegate");
-                delegateField.setAccessible(true);
-                DelegateHttpsURLConnection delegate = (DelegateHttpsURLConnection) delegateField.get(javaCon);
-                Field requestsField = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
-                requestsField.setAccessible(true);
-                requests = (MessageHeader) requestsField.get(delegate);
+                DelegateHttpsURLConnection delegate = (DelegateHttpsURLConnection) getFieldValue(javaCon, "delegate");
+                requests = (MessageHeader) getFieldValue(delegate, "requests");
+            } else if ("com.android.okhttp.internal.huc.HttpURLConnectionImpl".equals(javaCon.getClass().getName())) {
+
+                String[] headerArray = (String[]) getFieldValueDeep(javaCon, "httpEngine", "networkRequest", "headers", "namesAndValues");
+                if (headerArray != null) {
+                    requests = new MessageHeader();
+                    for (int i = 0; i < headerArray.length; i += 2) {
+                        String key = headerArray[i];
+                        String val = headerArray[i + 1];
+                        requests.add(key, val);
+                    }
+                }
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -202,5 +209,23 @@ public class Request {
         }
 
         return headers;
+    }
+
+    private static Object getFieldValue(Object o, String fieldName) throws Exception {
+        Field field = o.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Object val = field.get(o);
+        return val;
+    }
+    private static Object getFieldValueDeep(Object o, String... path) throws Exception {
+        Object val = o;
+        for (String s : path) {
+            val = getFieldValue(val, s);
+            if (val == null){
+                return null;
+            }
+        }
+
+        return val;
     }
 }
