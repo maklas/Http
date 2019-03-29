@@ -33,7 +33,8 @@ public class Header extends KeyValuePair {
         public static final Header chrome_07_2018 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
         public static final Header chrome_08_2018 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36");
         public static final Header chrome_12_2018 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
-        public static       Header mostRecent = chrome_12_2018;
+        public static final Header chrome_04_2019 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
+        public static       Header mostRecent = chrome_04_2019;
 
         public static Header with(String val){
             return new Header(key, val);
