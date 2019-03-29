@@ -21,7 +21,7 @@ public class CookieStore implements Iterable<Cookie>{
      * which is never null or empty string.
      */
     public String setCookie(String key, String value){
-        if (key == null) throw new RuntimeException("Never null");
+        if (key == null) throw new RuntimeException("Cookie key must not be null");
         if (Cookie.shouldBeDeleted(value))
             return remove(key);
 

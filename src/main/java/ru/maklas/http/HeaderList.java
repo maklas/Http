@@ -4,9 +4,10 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.Iterator;
 
+/** Header list. Used for storage and access.**/
 public class HeaderList implements Iterable<Header> {
 
-    protected Array<Header> headers = new Array<>();
+    Array<Header> headers = new Array<>();
 
     @Override
     public Iterator<Header> iterator() {
@@ -18,6 +19,29 @@ public class HeaderList implements Iterable<Header> {
     }
 
     public HeaderList add(Header header) {
+        headers.add(header);
+        return this;
+    }
+
+    /** Adds header. If there already was a header with the same Key, it gets replaced **/
+    public HeaderList addUnique(Header header) {
+        String key = header == null ? null : header.key;
+        int targetIndex = -1;
+        for (int i = 0; i < headers.size; i++) {
+            Header h = headers.get(i);
+            if ((key == null && header == null)
+                    || (key == h.key)
+                    || (key != null && key.equals(h.key))){
+                targetIndex = i;
+                break;
+            }
+        }
+        if (targetIndex == -1){
+            headers.add(header);
+        } else {
+            headers.set(targetIndex, header);
+        }
+
         headers.add(header);
         return this;
     }
@@ -66,3 +90,5 @@ public class HeaderList implements Iterable<Header> {
         return builder.toString();
     }
 }
+
+

@@ -18,4 +18,11 @@ public class KeyValuePair {
                 ", value='" + value + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof KeyValuePair &&
+                (key == ((KeyValuePair) obj).key || key != null && key.equals(((KeyValuePair) obj).key)) &&
+                (value == ((KeyValuePair) obj).value || value != null && value.equals(((KeyValuePair) obj).value));
+    }
 }

@@ -107,7 +107,7 @@ public class ConnectionBuilder {
      * @see Header
      */
     public ConnectionBuilder header(Header header){
-        this.headers.add(header);
+        this.headers.addUnique(header);
         return this;
     }
     /**
@@ -123,7 +123,7 @@ public class ConnectionBuilder {
      * @see Header
      */
     public ConnectionBuilder header(String key, String value){
-        this.headers.add(new Header(key, value));
+        this.headers.addUnique(new Header(key, value));
         return this;
     }
 
@@ -141,7 +141,7 @@ public class ConnectionBuilder {
      */
     public ConnectionBuilder headers(Array<Header> headers){
         for (Header header : headers) {
-            this.headers.add(header);
+            this.headers.addUnique(header);
         }
         return this;
     }
@@ -152,7 +152,7 @@ public class ConnectionBuilder {
      */
     public ConnectionBuilder headers(Header... headers){
         for (Header header : headers) {
-            this.headers.add(header);
+            this.headers.addUnique(header);
         }
         return this;
     }
@@ -307,7 +307,7 @@ public class ConnectionBuilder {
      */
     public ConnectionBuilder write(boolean addContentTypeHeader, byte[] data){
         if (addContentTypeHeader){
-            headers.add(Header.ContentType.application_x_www_form_url);
+            headers.addUnique(Header.ContentType.application_x_www_form_url);
         }
         this.output = data;
         return this;
@@ -323,7 +323,7 @@ public class ConnectionBuilder {
         if (built) throw new ConnectionException(ConnectionException.Type.USED, "This builder has already been used", null, this, null);
         built = true;
         this.buildStarted = System.currentTimeMillis();
-        if (cookies.size() > 0) headers.add(cookies.toHeader());
+        if (cookies.size() > 0) headers.addUnique(cookies.toHeader());
         URL url = null;
         try {
             url = buildUrl();
