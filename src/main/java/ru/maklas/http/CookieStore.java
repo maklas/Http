@@ -3,6 +3,7 @@ package ru.maklas.http;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Consumer;
 import com.badlogic.gdx.utils.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
@@ -139,4 +140,22 @@ public class CookieStore implements Iterable<Cookie>{
     public boolean contains(String key) {
         return getCookie(key) != null;
     }
+
+    public static CookieStore parse(String cookieContainingString){
+        CookieStore store = new CookieStore();
+        if (StringUtils.isEmpty(cookieContainingString)){
+            return store;
+        }
+
+        String[] split = cookieContainingString.split(";");
+        for (String s : split) {
+            String[] keyValue = s.split("=");
+            if (keyValue.length == 2){
+                store.setCookie(StringUtils.trimToEmpty(keyValue[0]), StringUtils.trimToEmpty(keyValue[1]));
+            }
+        }
+
+        return store;
+    }
+
 }
