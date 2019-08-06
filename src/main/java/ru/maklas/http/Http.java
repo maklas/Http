@@ -87,7 +87,7 @@ public class Http {
     }
 
     /**
-     * Enabled by default. When enabled, Response.getBody() and Response.getEscapedBody() might have different content.
+     * Enabled by default. When enabled, Response.getBodyUnescaped() and Response.getBodyAsIs() might have different content.
      * Escaping is done via {@link org.apache.commons.lang3.StringEscapeUtils#escapeJava(String)}.
      * Escaping usually produce a more human-readable result.
      * If you don't need the functionality it can be disabled in favor of speed and consuming less memory as

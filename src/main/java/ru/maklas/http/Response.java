@@ -26,8 +26,8 @@ public class Response {
     private final int msToConnect;
     private final Request request;
     private ResponseHeaders headerCache;
-    private String fullResponse;
-    private String fullResponseEscaped;
+    private String responseUnescaped;
+    private String responseBodyAsIs;
     private int responseCode;
     private String responseMessage;
     private CookieChangeList cookieChangeList;
@@ -135,16 +135,18 @@ public class Response {
         return cookieChangeList;
     }
 
-    public String getBody(){
-        return fullResponse;
+    /** Unescaped body of the response. Changed version, where escaping of characters was removed **/
+    public String getBodyUnescaped(){
+        return responseUnescaped;
     }
 
-    public String getEscapedBody(){
-        return fullResponseEscaped;
+    /** Body of the response as it was received, unchanged **/
+    public String getBodyAsIs(){
+        return responseBodyAsIs;
     }
 
     private String _getBody() throws IOException {
-        if (fullResponse == null) {
+        if (responseUnescaped == null) {
             BufferedReader reader;
             try {
                 reader = new BufferedReader(_getReader(getCharset()));
@@ -154,10 +156,10 @@ public class Response {
                 try {
                     reader = new BufferedReader(_getErrorReader(getCharset()));
                 } catch (Exception e1) {
-                    fullResponseEscaped = "";
-                    fullResponse = "";
+                    responseBodyAsIs = "";
+                    responseUnescaped = "";
                     bodyException = e1;
-                    return fullResponse;
+                    return responseUnescaped;
                 }
             }
 
@@ -168,20 +170,20 @@ public class Response {
                 builder.append("\n");
                 s = reader.readLine();
             }
-            fullResponseEscaped = builder.toString();
+            responseBodyAsIs = builder.toString();
             if (performUnescape) {
                 try {
-                    fullResponse = unescape(fullResponseEscaped);
+                    responseUnescaped = unescape(responseBodyAsIs);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    fullResponse = fullResponseEscaped;
+                    responseUnescaped = responseBodyAsIs;
                 }
             } else {
-                fullResponse = fullResponseEscaped;
+                responseUnescaped = responseBodyAsIs;
             }
             reader.close();
         }
-        return fullResponse;
+        return responseUnescaped;
     }
 
     public static String unescape(String input){
@@ -269,7 +271,7 @@ public class Response {
         try {
             HeaderList requestHeaders = getRequest().getRequestHeaders();
             URL requestUrl = getRequest().getRequestUrl();
-            String fullResponse = getBody();
+            String fullResponse = getBodyUnescaped();
             int responseCode = getResponseCode();
             String responseMessage = getResponseMessage();
 
