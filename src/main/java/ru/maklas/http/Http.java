@@ -64,17 +64,15 @@ public class Http {
 
 
     public static void setDefaultCookieHandlerByJFX(boolean enabled){
-        System.setProperty(
-                "com.sun.webkit.setDefaultCookieHandler",
-                Boolean.toString(enabled));
+        setProperty("com.sun.webkit.setDefaultCookieHandler", Boolean.toString(enabled));
     }
 
     public static void setDefaultKeepAlive(boolean enabled){
-        System.setProperty("http.keepAlive", Boolean.toString(enabled));
+        setProperty("http.keepAlive", Boolean.toString(enabled));
     }
 
     public static void setDefaultMaxConnections(int connections) {
-        System.setProperty("http.maxConnections", Integer.toString(20));
+        setProperty("http.maxConnections", Integer.toString(20));
     }
 
     public static void setDefaultUriEncodingFunction(@MagicConstant(valuesFromClass = UrlEncoder.class)MapFunction<String, String> encFunc){
@@ -110,4 +108,13 @@ public class Http {
         }
         return false;
     }
+
+
+    private static void setProperty(String property, String val){
+		try {
+			System.setProperty(property, val);
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+	}
 }
