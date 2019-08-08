@@ -6,9 +6,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class Http {
 
-    public static final String GET = "GET";
-    public static final String POST = "POST";
-    public static final String HEAD = "HEAD";
+    public static final String GET = "GET"; //Obtain data or page
+    public static final String POST = "POST"; //Submit data, change state.
+    public static final String HEAD = "HEAD"; //Asks for a response identical to that of a GET request, but without the response body.
+    public static final String DELETE = "DELETE"; //Deletes the specified resource.
+    public static final String CONNECT = "CONNECT"; //Establishes a tunnel to the server identified by the target resource.
+    public static final String OPTIONS = "OPTIONS"; //Used to describe the communication options for the target resource.
+    public static final String TRACE = "TRACE"; //Performs a message loop-back test along the path to the target resource.
 
 
     @Nullable

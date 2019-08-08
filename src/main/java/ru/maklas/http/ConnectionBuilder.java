@@ -2,13 +2,17 @@ package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
 import org.intellij.lang.annotations.MagicConstant;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.Charset;
+import java.util.regex.Pattern;
 
 public class ConnectionBuilder {
+
+    public static final Pattern PROTOCOL_PATTERN = Pattern.compile("^[.\\-+a-zA-Z0-9]+://.+");
 
     private String stringUrl;
     private URL url;
@@ -357,37 +361,45 @@ public class ConnectionBuilder {
     //* PRIVATES *//
     //************//
 
-    private String getUrlAsString(){
-        if (stringUrl != null) return stringUrl;
-        return url.toString();
-    }
-
     private URL buildUrl() throws MalformedURLException {
         URL url;
 
         if (Http.GET.equals(method) && output != null){
             String query = new String(output);
             if (this.url != null){
-                url = new URL(construct(this.url.toString(), query));
+                url = parseUrl(construct(this.url.toString(), query));
             } else {
-                url = new URL(construct(stringUrl, query));
+                url = parseUrl(construct(stringUrl, query));
             }
         } else {
             if (this.url != null) {
                 url = this.url;
             } else {
-                url = new URL(stringUrl);
+                url = parseUrl(stringUrl);
             }
         }
         return url;
     }
 
-    private String construct(String url, String query){
-        if (url != null && url.endsWith("?")){
+    /** appends query string to the url  **/
+    private static String construct(String url, @NotNull String query){
+        if (url == null) url = "";
+
+        if (url.endsWith("?")){
             return url + query;
         } else {
+            if (url.endsWith("/")){
+                url = url.substring(0, url.length() - 1);
+            }
             return url + "?" + query;
         }
+    }
+
+    private static URL parseUrl(String fullQuery) throws MalformedURLException {
+        if (!PROTOCOL_PATTERN.matcher(fullQuery).matches()){
+            return new URL("http://" + fullQuery);
+        }
+        return new URL(fullQuery);
     }
 
     private HttpURLConnection openConnection(URL url) throws IOException {
@@ -396,7 +408,6 @@ public class ConnectionBuilder {
             con = (HttpURLConnection) url.openConnection();
         } else {
             Proxy p = new Proxy(proxy.getType(), new InetSocketAddress(proxy.getAddress(), proxy.getPort()));
-
             con = (HttpURLConnection) url.openConnection(p);
         }
 

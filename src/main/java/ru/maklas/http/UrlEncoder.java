@@ -9,9 +9,9 @@ import java.nio.charset.Charset;
 
 public class UrlEncoder {
 
+    public static final MapFunction<String, String> javaUrl = UrlEncoder::encodeJavaUrl;
     public static final MapFunction<String, String> jsUri = UrlEncoder::encodeURIComponent;
     public static final MapFunction<String, String> jsUriAndPlus = UrlEncoder::encodeURIComponentPlus;
-    public static final MapFunction<String, String> javaUrl = UrlEncoder::encodeJavaUrl;
     public static       MapFunction<String, String> defaultEncoding = javaUrl;
 
     private Array<KeyValuePair> pairs = new Array<>();
@@ -74,7 +74,10 @@ public class UrlEncoder {
     }
 
 
-    /**  Кодирует по правилам x-www-form-urlencoded документации {@link URLEncoder} **/
+    /**
+     * Кодирует по правилам x-www-form-urlencoded документации {@link URLEncoder}.
+     * Аналагичен кодированию параметров в браузере при GET-запросе
+     */
     public static String encodeJavaUrl(String s) {
         try {
             return URLEncoder.encode(s, "UTF-8");
