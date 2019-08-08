@@ -352,7 +352,10 @@ public class ConnectionBuilder {
         }
         if (allowRedirectChanged) javaCon.setInstanceFollowRedirects(followRedirect);
         if (useCacheChanged) javaCon.setUseCaches(useCache);
-        javaCon.setDoOutput(output != null);
+
+        if (output != null && !Http.GET.equals(method)){
+            javaCon.setDoOutput(true);
+        }
 
         for (Header header : headers) {
             javaCon.addRequestProperty(header.key, header.value);
