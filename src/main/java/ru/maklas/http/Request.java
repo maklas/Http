@@ -195,6 +195,16 @@ public class Request {
                         requests.add(key, val);
                     }
                 }
+            } else if ("com.android.okhttp.internal.huc.HttpsURLConnectionImpl".equals(javaCon.getClass().getName())) {
+                String[] headerArray = (String[]) getFieldValueDeep(javaCon, "delegate", "httpEngine", "networkRequest", "headers", "namesAndValues");
+                if (headerArray != null) {
+                    requests = new MessageHeader();
+                    for (int i = 0; i < headerArray.length; i += 2) {
+                        String key = headerArray[i];
+                        String val = headerArray[i + 1];
+                        requests.add(key, val);
+                    }
+                }
             }
         } catch (Throwable e) {
             e.printStackTrace();
