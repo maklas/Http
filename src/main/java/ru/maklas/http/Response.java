@@ -284,8 +284,8 @@ public class Response {
             for (Header requestHeader : requestHeaders) {
                 w.print("  "); w.println(requestHeader);
             }
-            if (getRequest().getSendingBody() != null) {
-                w.println("HTTP Body:");
+            if (!Http.GET.equalsIgnoreCase(getRequest().getBuilder().getMethod()) && getRequest().getSendingBody() != null) {
+                w.println("Body:");
                 w.println(new String(getRequest().getSendingBody(), Charset.forName("UTF-8")));
             }
             w.println();
