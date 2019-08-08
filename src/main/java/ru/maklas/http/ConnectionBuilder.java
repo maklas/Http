@@ -88,7 +88,12 @@ public class ConnectionBuilder {
                 .url(url);
     }
 
-    /** Specify connection address. Remember to write it with http:// or https:// **/
+    /**
+     * Specify connection address.
+     * format <b>"example.com"</b> is supported.
+     * If protocol is not specified,
+     * <b>http://</b> is automatically used
+     */
     public ConnectionBuilder url(String url){
         this.stringUrl = url;
         return this;
