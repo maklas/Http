@@ -91,17 +91,6 @@ public class Http {
     }
 
     /**
-     * Enabled by default. When enabled, Response.getBodyUnescaped() and Response.getBodyAsIs() might have different content.
-     * Escaping is done via {@link org.apache.commons.lang3.StringEscapeUtils#escapeJava(String)}.
-     * Escaping usually produce a more human-readable result.
-     * If you don't need the functionality it can be disabled in favor of speed and consuming less memory as
-     * 2 versions of a response are present when this feature enabled. Both escaped and unescaped Strings
-     */
-    public static void enableUnescaping(boolean enabled){
-        Response.performUnescape = enabled;
-    }
-
-    /**
      * Disabled by default. If enabled, appends headers which are added by underlying Java implementation
      * to {@link Request} after {@link Request#send()} was executed. For example, by default, if User-Agent header is not specified in request,
      * It's automatically added by HttpUrlConnection just before executing request. These headers are not visible until connection is established

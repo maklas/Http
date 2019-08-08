@@ -26,6 +26,7 @@ public class Response {
     private final int msToConnect;
     private final Request request;
     private ResponseHeaders headerCache;
+    private boolean unescaped = false;
     private String responseUnescaped;
     private String responseBodyAsIs;
     private int responseCode;
@@ -135,8 +136,22 @@ public class Response {
         return cookieChangeList;
     }
 
-    /** Unescaped body of the response. Changed version, where escaping of characters was removed **/
+    /**
+     * Unescaped body of the response. Changed version, where escaping of characters was removed.
+     * Usually produces more human-readable result.
+     */
     public String getBodyUnescaped(){
+        if (!unescaped){
+            if (responseBodyAsIs != null){
+                try {
+                    responseUnescaped = unescape(responseBodyAsIs);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    responseUnescaped = responseBodyAsIs;
+                }
+            }
+            unescaped = true;
+        }
         return responseUnescaped;
     }
 
@@ -146,7 +161,7 @@ public class Response {
     }
 
     private String _getBody() throws IOException {
-        if (responseUnescaped == null) {
+        if (responseBodyAsIs == null) {
             BufferedReader reader;
             try {
                 reader = new BufferedReader(_getReader(getCharset()));
@@ -157,9 +172,8 @@ public class Response {
                     reader = new BufferedReader(_getErrorReader(getCharset()));
                 } catch (Exception e1) {
                     responseBodyAsIs = "";
-                    responseUnescaped = "";
                     bodyException = e1;
-                    return responseUnescaped;
+                    return responseBodyAsIs;
                 }
             }
 
@@ -171,19 +185,9 @@ public class Response {
                 s = reader.readLine();
             }
             responseBodyAsIs = builder.toString();
-            if (performUnescape) {
-                try {
-                    responseUnescaped = unescape(responseBodyAsIs);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    responseUnescaped = responseBodyAsIs;
-                }
-            } else {
-                responseUnescaped = responseBodyAsIs;
-            }
             reader.close();
         }
-        return responseUnescaped;
+        return responseBodyAsIs;
     }
 
     public static String unescape(String input){
