@@ -3,10 +3,13 @@ package ru.maklas.http;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Date;
 
@@ -42,14 +45,16 @@ public class ConnectionException extends Exception {
          */
         CONNECTION_ERROR,
 
-
-
     }
 
     private final Type type;
     private final ConnectionBuilder builder;
     private final Request request;
     private final long created;
+
+    public ConnectionException(IOException cause, ConnectionBuilder builder, Request request)  {
+        this(getExceptionType(cause), cause, builder, request);
+    }
 
     public ConnectionException(Type type, IOException cause, ConnectionBuilder builder, Request request)  {
         super(cause.getMessage(), cause);
@@ -133,5 +138,18 @@ public class ConnectionException extends Exception {
 
     public void printStackTrace(OutputStream out){
         printStackTrace(new PrintWriter(out));
+    }
+
+
+    static ConnectionException.Type getExceptionType(IOException e){
+        if (e instanceof SocketTimeoutException){
+            return ConnectionException.Type.TIME_OUT;
+        } else if (e instanceof UnknownHostException){
+            return ConnectionException.Type.UNKNOWN_ADDRESS;
+        } else if (e instanceof SSLHandshakeException){
+            return ConnectionException.Type.NOT_SSL;
+        } else {
+            return ConnectionException.Type.CONNECTION_ERROR;
+        }
     }
 }

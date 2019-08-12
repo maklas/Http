@@ -63,7 +63,7 @@ public class Request {
                     os.close();
                     if (callback != null) callback.wroteBody();
                 } catch (IOException e) {
-                    ConnectionException ce = new ConnectionException(e instanceof UnknownHostException ? ConnectionException.Type.UNKNOWN_ADDRESS : ConnectionException.Type.IO, e, getBuilder(), this);
+                    ConnectionException ce = new ConnectionException(e, getBuilder(), this);
                     if (callback != null) callback.interrupted(ce);
                     throw ce;
                 }
@@ -73,23 +73,9 @@ public class Request {
         try {
             javaCon.connect();
         } catch (IOException e) {
-            if (e instanceof SocketTimeoutException){
-                ConnectionException ce = new ConnectionException(ConnectionException.Type.TIME_OUT, e, getBuilder(), this);
-                if (callback != null) callback.interrupted(ce);
-                throw ce;
-            } else if (e instanceof UnknownHostException){
-                ConnectionException ce = new ConnectionException(ConnectionException.Type.UNKNOWN_ADDRESS, e, getBuilder(), this);
-                if (callback != null) callback.interrupted(ce);
-                throw ce;
-            } else if (e instanceof SSLHandshakeException){
-                ConnectionException ce = new ConnectionException(ConnectionException.Type.NOT_SSL, e, getBuilder(), this);
-                if (callback != null) callback.interrupted(ce);
-                throw ce;
-            } else {
-                ConnectionException ce = new ConnectionException(ConnectionException.Type.CONNECTION_ERROR, e, getBuilder(), this);
-                if (callback != null) callback.interrupted(ce);
-                throw ce;
-            }
+        	ConnectionException ce = new ConnectionException(e, getBuilder(), this);
+			if (callback != null) callback.interrupted(ce);
+			throw ce;
         }
         Response response;
         try {
