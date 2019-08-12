@@ -63,7 +63,7 @@ public class Request {
                     os.close();
                     if (callback != null) callback.wroteBody();
                 } catch (IOException e) {
-                    ConnectionException ce = new ConnectionException(ConnectionException.Type.IO, e, getBuilder(), this);
+                    ConnectionException ce = new ConnectionException(e instanceof UnknownHostException ? ConnectionException.Type.UNKNOWN_ADDRESS : ConnectionException.Type.IO, e, getBuilder(), this);
                     if (callback != null) callback.interrupted(ce);
                     throw ce;
                 }
