@@ -181,8 +181,10 @@ public class Response {
             String s = reader.readLine();
             while (s != null) {
                 builder.append(s);
-                builder.append("\n");
                 s = reader.readLine();
+                if (s != null) {
+                    builder.append("\n");
+                }
             }
             responseBodyAsIs = builder.toString();
             reader.close();
