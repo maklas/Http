@@ -41,8 +41,6 @@ public class HeaderList implements Iterable<Header> {
         } else {
             headers.set(targetIndex, header);
         }
-
-        headers.add(header);
         return this;
     }
 
