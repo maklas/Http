@@ -12,6 +12,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
@@ -33,6 +36,7 @@ public class Response {
     private CookieChangeList cookieChangeList;
     private boolean errorStreamUsed;
     private Exception bodyException;
+    private int contentLength; //Content length from the headers. Doesn't actually represent length of the content. Might be 0
     private Charset charset;
 
 
@@ -102,7 +106,27 @@ public class Response {
     /** Response headers **/
     public ResponseHeaders getHeaders() {
         if (headerCache == null){
-            headerCache = new ResponseHeaders(javaCon.getHeaderFields());
+            headerCache = new ResponseHeaders();
+            Set<Map.Entry<String, List<String>>> entries = javaCon.getHeaderFields().entrySet();
+            for (Map.Entry<String, List<String>> entry : entries) {
+                if (entry.getKey() == null || entry.getValue() == null) continue;
+                for (String s : entry.getValue()) {
+                    if (s != null) {
+                        headerCache.add(new Header(entry.getKey(), s));
+                    }
+                }
+                if ("content-length".equalsIgnoreCase(entry.getKey())) {
+                    try {
+                        this.contentLength = Integer.parseInt(entry.getValue().get(0));
+                    } catch (Throwable ignore) { }
+                } else if (Header.ContentType.key.equalsIgnoreCase(entry.getKey())){
+                    try {
+                        String afterCharset = StringUtils.substringAfter(entry.getValue().get(0), "charset=");
+                        String responseCharset = StringUtils.substringBefore(afterCharset, ";");
+                        charset = Charset.forName(responseCharset);
+                    } catch (Exception ignore) {}
+                }
+            }
         }
         return headerCache;
     }
@@ -175,14 +199,15 @@ public class Response {
 
     private String _getBody() throws IOException {
         if (responseBodyAsIs == null) {
-            BufferedReader reader;
+
+            Reader reader;
             try {
-                reader = new BufferedReader(_getReader(getCharset()));
+                reader = _getReader(getCharset());
             } catch (Exception e) {
                 errorStreamUsed = true;
                 bodyException = e;
                 try {
-                    reader = new BufferedReader(_getErrorReader(getCharset()));
+                    reader = _getErrorReader(getCharset());
                 } catch (Exception e1) {
                     responseBodyAsIs = "";
                     bodyException = e1;
@@ -190,16 +215,24 @@ public class Response {
                 }
             }
 
-            StringBuilder builder = new StringBuilder();
-            String s = reader.readLine();
-            while (s != null) {
-                builder.append(s);
-                s = reader.readLine();
-                if (s != null) {
-                    builder.append("\n");
-                }
+            int bufferSize;
+            if (contentLength <= 0) {
+                bufferSize = 8192;
+            } else if (contentLength < 16384) {
+                bufferSize = 4096;
+            } else if (contentLength < 131072){
+                bufferSize = 8192;
+            } else {
+                bufferSize = 16384;
             }
-            responseBodyAsIs = builder.toString();
+            StringBuilder sb = new StringBuilder();
+            char[] buffer = new char[bufferSize];
+            int read = reader.read(buffer);
+            while (read != -1) {
+                sb.append(buffer, 0, read);
+                read = reader.read(buffer);
+            }
+            responseBodyAsIs = sb.toString();
             reader.close();
         }
         return responseBodyAsIs;
@@ -218,18 +251,7 @@ public class Response {
     }
 
     private Charset getCharset(){
-        if (charset == null) {
-            charset = utf8;
-            Header contentType = getHeaders().getHeader(Header.ContentType.key);
-            if (contentType != null) {
-                try {
-                    String afterCharset = StringUtils.substringAfter(contentType.value, "charset=");
-                    String responseCharset = StringUtils.substringBefore(afterCharset, ";");
-                    charset = Charset.forName(responseCharset);
-                } catch (Exception ignore) {}
-            }
-        }
-        return charset;
+        return charset == null ? utf8 : charset;
     }
 
     private InputStream wrapStream(InputStream is) throws IOException {

@@ -11,6 +11,9 @@ import java.util.Set;
 public class ResponseHeaders extends HeaderList {
 
 
+    public ResponseHeaders() {
+        super();
+    }
     public ResponseHeaders(Map<String, List<String>> headerMap) {
         Set<Map.Entry<String, List<String>>> entries = headerMap.entrySet();
 
