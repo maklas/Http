@@ -14,6 +14,9 @@ public class Http {
     public static final String OPTIONS = "OPTIONS"; //Used to describe the communication options for the target resource.
     public static final String TRACE = "TRACE"; //Performs a message loop-back test along the path to the target resource.
 
+    static int defaultConnectTimeOut = 10_000;
+    static int defaultReadTimeOut = 20_000;
+    static boolean fetchJavaHeaders = false;
 
     @Nullable
     public static String getResponseCodeMeaning(int code, String def){
@@ -62,7 +65,6 @@ public class Http {
         }
     }
 
-
     public static void setDefaultCookieHandlerByJFX(boolean enabled){
         setProperty("com.sun.webkit.setDefaultCookieHandler", Boolean.toString(enabled));
     }
@@ -84,8 +86,8 @@ public class Http {
     }
 
     public static void setDefaultTimeOut(int connectTimeOutMs, int readTimeOutMs){
-        Request.defaultConnectTimeOut = connectTimeOutMs;
-        Request.defaultReadTimeOut = readTimeOutMs;
+        defaultConnectTimeOut = connectTimeOutMs;
+        defaultReadTimeOut = readTimeOutMs;
     }
 
     /**
@@ -96,7 +98,7 @@ public class Http {
      * Useful for debugging when you want to know what's actually sent to the host, including Java's headers.
      */
     public static void fetchJavaHeaders(boolean enabled){
-        Request.fetchJavaHeaders = enabled;
+        fetchJavaHeaders = enabled;
     }
 
     public static boolean setDnsCacheTTL(int seconds){
@@ -108,7 +110,6 @@ public class Http {
         }
         return false;
     }
-
 
     private static void setProperty(String property, String val){
 		try {

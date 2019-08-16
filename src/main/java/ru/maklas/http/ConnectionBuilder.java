@@ -60,32 +60,24 @@ public class ConnectionBuilder {
 
     /** new ConnectionBuilder starting with get method request **/
     public static ConnectionBuilder get(){
-        return new ConnectionBuilder()
-                .headers(defaultHeaders.headers)
-                .method(Http.GET);
+        return new ConnectionBuilder().method(Http.GET);
     }
 
     /** new ConnectionBuilder starting with POST method request and defaultHeaders included **/
     public static ConnectionBuilder post(){
-        return new ConnectionBuilder()
-                .headers(defaultHeaders.headers)
-                .method(Http.POST);
+        return new ConnectionBuilder().method(Http.POST);
     }
 
     /** new ConnectionBuilder starting with get method request **/
     public static ConnectionBuilder get(String url){
         return new ConnectionBuilder()
-                .method(Http.GET)
-                .headers(defaultHeaders.headers)
-                .url(url);
+                .method(Http.GET).url(url);
     }
 
     /** new ConnectionBuilder starting with pot method request **/
     public static ConnectionBuilder post(String url){
         return new ConnectionBuilder()
-                .method(Http.POST)
-                .headers(defaultHeaders.headers)
-                .url(url);
+                .method(Http.POST).url(url);
     }
 
     /**
@@ -182,13 +174,13 @@ public class ConnectionBuilder {
     }
 
     /** Do this requesst using proxy **/
-    public ConnectionBuilder usingProxy(@Nullable ProxyData data){
+    public ConnectionBuilder proxy(@Nullable ProxyData data){
         this.proxy = data;
         return this;
     }
 
     /** Do this requesst using proxy **/
-    public ConnectionBuilder usingProxy(String address, int port){
+    public ConnectionBuilder proxy(String address, int port){
         this.proxy = new ProxyData(address, port);
         return this;
     }
@@ -454,10 +446,5 @@ public class ConnectionBuilder {
 
     CookieStore getAssignedCookieStore() {
         return assignedCookieStore;
-    }
-
-    private static final MutableHeaderList defaultHeaders = new MutableHeaderList();
-    public static MutableHeaderList getDefaultHeaderList(){
-        return defaultHeaders;
     }
 }

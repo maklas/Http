@@ -19,7 +19,6 @@ import java.util.zip.GZIPInputStream;
 public class Response {
 
     private static final Charset utf8 = Charset.forName("UTF-8");
-    static boolean performUnescape = true;
 
     private final HttpURLConnection javaCon;
     private final URL requestUrl;
@@ -52,42 +51,55 @@ public class Response {
         if (callback != null) callback.finished(this);
     }
 
+    /** Time took to connect to the service **/
     public int getResponseTime() {
         return msToConnect;
     }
 
+    /** Http code of the response. Can be translated with {@link Http#getResponseCodeMeaning(int, String)} **/
     public int getResponseCode() {
         return responseCode;
     }
 
+    /** The request **/
     public Request getRequest() {
         return request;
     }
 
+    /**
+     * Response URL can vary from the {@link #getRequestUrl()} if redirection is allowed and it happened automatically
+     * You can check if redirection took place with {@link #isRedirect()} or {@link #urlsMatch()}
+     */
     public URL getResponseUrl(){
         return javaCon.getURL();
     }
 
+    /** URL used to connect to the service **/
     public URL getRequestUrl() {
         return requestUrl;
     }
 
+    /** Checks if request url matches response url. Can indicate redirection **/
     public boolean urlsMatch(){
         return getRequestUrl().toString().equalsIgnoreCase(getResponseUrl().toString());
     }
 
+    /** Response message. Should match HttpResponseCode**/
     public String getResponseMessage() {
         return responseMessage;
     }
 
+    /** Underlying HttpUrlConnection that was used to connect **/
     public HttpURLConnection getJavaCon() {
         return javaCon;
     }
 
+    /** Exception that was thrown while attempting to obtain body of the response **/
     public Exception getBodyException() {
         return bodyException;
     }
 
+    /** Response headers **/
     public ResponseHeaders getHeaders() {
         if (headerCache == null){
             headerCache = new ResponseHeaders(javaCon.getHeaderFields());
@@ -95,7 +107,7 @@ public class Response {
         return headerCache;
     }
 
-    /** If true, error stream was used to fetch responseData **/
+    /** If true, error stream was used to fetch body **/
     public boolean isError() {
         return errorStreamUsed;
     }
@@ -132,6 +144,7 @@ public class Response {
         return locationHeader == null ? null : locationHeader.value;
     }
 
+    /** Changelist of cookies after this response. Which were added or removed **/
     public CookieChangeList getCookieChangeList() {
         return cookieChangeList;
     }
@@ -192,7 +205,7 @@ public class Response {
         return responseBodyAsIs;
     }
 
-    public static String unescape(String input){
+    private static String unescape(String input){
         return StringEscapeUtils.unescapeJava(input.replaceAll("\\\\\\\\u", "\\\\u"));
     }
 
@@ -247,6 +260,7 @@ public class Response {
         return getTrace();
     }
 
+    /** Information about Http exchange. Full data on request and response. Human-readable **/
     public String getTrace(){
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         printTrace(bos);
@@ -271,7 +285,7 @@ public class Response {
         return bean;
     }
 
-
+    /** Information about Http exchange. Full data on request and response. Human-readable **/
     public void printTrace(OutputStream out){
         PrintWriter w = new PrintWriter(out);
         try {
@@ -282,7 +296,7 @@ public class Response {
             String responseMessage = getResponseMessage();
 
             w.println("------- REQUEST -------");
-            w.println("Date: " + new Date().toString());
+            w.println("Date: " + (request.timeRequested == 0 ? "-" : new Date().toString()));
             w.println("URL: " + requestUrl);
             w.println("Method: " + getRequest().getBuilder().getMethod());
             ProxyData proxy = getRequest().getBuilder().getProxy();

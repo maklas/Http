@@ -1,34 +1,30 @@
 package ru.maklas.http;
 
+import org.jetbrains.annotations.Nullable;
 import sun.net.www.MessageHeader;
 import sun.net.www.protocol.https.DelegateHttpsURLConnection;
-import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
-import javax.net.ssl.SSLHandshakeException;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Request {
 
-    public static int defaultConnectTimeOut = 10_000;
-    public static int defaultReadTimeOut = 20_000;
-    public static boolean fetchJavaHeaders = false;
     private HttpURLConnection javaCon;
     private final URL url;
     private final String method;
     private byte[] output;
     private final HeaderList reqHeaders;
     private final ConnectionBuilder builder;
+    /** Time when the Request was sent and HttpResponseCode received **/
+    long timeRequested;
 
     /** Already connected! **/
     Request(HttpURLConnection javaCon, URL url, String method, byte[] output, HeaderList reqHeaders, ConnectionBuilder builder) {
@@ -44,13 +40,16 @@ public class Request {
         return builder;
     }
 
+    /** Data written to output **/
+    @Nullable
     public byte[] getSendingBody() {
         return output;
     }
 
+    /** Data written to output **/
+    @Nullable
     public String getSendingBodyAsString() {
-        if (output == null) return "";
-        return new String(output);
+        return output == null ? null : new String(output);
     }
 
     private Response _send(HttpCallback callback) throws ConnectionException {
@@ -80,10 +79,11 @@ public class Request {
         Response response;
         try {
             int responseCode = javaCon.getResponseCode();
-            if (fetchJavaHeaders){
+            if (Http.fetchJavaHeaders){
                 appendJavaHeaders();
             }
-            long ttc = System.currentTimeMillis() - before;
+            timeRequested = System.currentTimeMillis();
+            long ttc = timeRequested - before;
             if (callback != null) callback.connected(responseCode);
             response = new Response(javaCon, url, (int) ttc, this, callback);
         } catch (IOException e) {
@@ -95,14 +95,14 @@ public class Request {
     }
 
     public Response send() throws ConnectionException {
-        javaCon.setConnectTimeout(defaultConnectTimeOut);
-        javaCon.setReadTimeout(defaultReadTimeOut);
+        javaCon.setConnectTimeout(Http.defaultConnectTimeOut);
+        javaCon.setReadTimeout(Http.defaultReadTimeOut);
         return _send(null);
     }
 
     public Response send(HttpCallback callback) throws ConnectionException {
-        javaCon.setConnectTimeout(defaultConnectTimeOut);
-        javaCon.setReadTimeout(defaultReadTimeOut);
+        javaCon.setConnectTimeout(Http.defaultConnectTimeOut);
+        javaCon.setReadTimeout(Http.defaultReadTimeOut);
         return _send(callback);
     }
 
@@ -132,16 +132,19 @@ public class Request {
         return reqHeaders;
     }
 
+    /** Use it to send data yourself. Throws exception if data was specified in ConnectionBuilder **/
     public OutputStream getOutputStream() throws IOException {
         if (output != null) throw new IOException("Output data was already send!!!");
         return javaCon.getOutputStream();
     }
 
+    /** Use it to send data yourself. Throws exception if data was specified in ConnectionBuilder **/
     public OutputStreamWriter getWriter() throws IOException {
         if (output != null) throw new IOException("Output data was already send!!!");
         return new OutputStreamWriter(getOutputStream());
     }
 
+    /** Underlying HttpUrlConnection that is used to connect **/
     public HttpURLConnection getJavaCon() {
         return javaCon;
     }

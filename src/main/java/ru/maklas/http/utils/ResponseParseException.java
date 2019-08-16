@@ -2,7 +2,10 @@ package ru.maklas.http.utils;
 
 import ru.maklas.http.Response;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 
 /** Ошибка при парсинге ответа от сервера. **/
 public class ResponseParseException extends Exception {
