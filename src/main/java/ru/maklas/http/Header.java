@@ -1,5 +1,7 @@
 package ru.maklas.http;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,6 +48,20 @@ public class Header extends KeyValuePair {
         public static final String key = "Host";
         public static Header of(String s){
             return new Header(key, s);
+        }
+
+        public static Header fromUrl(URL url){
+            return new Header(key, url.getHost());
+        }
+
+        public static Header fromUrl(String url){
+            URL javaUrl = null;
+            try {
+                javaUrl = new URL(url);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            return new Header(key, javaUrl != null ? javaUrl.getHost() : "");
         }
     }
 
