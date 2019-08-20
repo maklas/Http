@@ -366,6 +366,12 @@ public class ConnectionBuilder {
         return new Request(javaCon, url, method, output, headers, this);
     }
 
+    public Response send() throws ConnectionException {
+        Request request = build();
+        Response response = request.send();
+        return response;
+    }
+
 
 
     //************//
