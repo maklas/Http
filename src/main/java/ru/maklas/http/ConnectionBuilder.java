@@ -1,6 +1,7 @@
 package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
+import org.apache.commons.lang3.StringUtils;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,6 +79,16 @@ public class ConnectionBuilder {
     public static ConnectionBuilder post(String url){
         return new ConnectionBuilder()
                 .method(Http.POST).url(url);
+    }
+
+    /** new ConnectionBuilder starting with get method request **/
+    public static ConnectionBuilder get(String base, String path){
+        return get(combineUrl(base, path));
+    }
+
+    /** new ConnectionBuilder starting with pot method request **/
+    public static ConnectionBuilder post(String base, String path){
+        return post(combineUrl(base, path));
     }
 
     /**
@@ -400,6 +411,14 @@ public class ConnectionBuilder {
             return new URL("http://" + fullQuery);
         }
         return new URL(fullQuery);
+    }
+
+    private static String combineUrl(String baseUrl, String path) {
+        if (StringUtils.isEmpty(baseUrl)) throw new RuntimeException("Base url must not be empty");
+        if (StringUtils.isEmpty(path)) return baseUrl;
+        baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        path = path.startsWith("/") ? path : "/" + path;
+        return baseUrl + path;
     }
 
     private HttpURLConnection openConnection(URL url) throws IOException {
