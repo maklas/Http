@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 public class ConnectionBuilder {
@@ -29,10 +28,8 @@ public class ConnectionBuilder {
     private boolean built = false;
     private CookieStore assignedCookieStore;
 
-    /** Creates new Connection builder without default headers specified.**/
-    public ConnectionBuilder() {
-
-    }
+    /** Use {@link ConnectionBuilder#get(String) .get()} or  {@link ConnectionBuilder#post(String) .post()} instead **/
+    public ConnectionBuilder() { }
 
     public ConnectionBuilder cpy(){
         ConnectionBuilder cb = new ConnectionBuilder();
@@ -82,12 +79,18 @@ public class ConnectionBuilder {
     }
 
     /** new ConnectionBuilder starting with get method request **/
-    public static ConnectionBuilder get(String base, String path){
+    public static ConnectionBuilder get(String base, @Nullable String path){
         return get(combineUrl(base, path));
     }
 
+
+    /** new ConnectionBuilder starting with get method request **/
+    public static ConnectionBuilder get(String base, @Nullable String path, @Nullable UrlEncoder query){
+        return get(combineUrl(base, path)).write(query == null ? null : query.encode().getBytes(Charsets.utf_8));
+    }
+
     /** new ConnectionBuilder starting with pot method request **/
-    public static ConnectionBuilder post(String base, String path){
+    public static ConnectionBuilder post(String base, @Nullable String path){
         return post(combineUrl(base, path));
     }
 
@@ -173,13 +176,13 @@ public class ConnectionBuilder {
      * Only fetches cookies from the store into Cookie header of the request.
      * Doesn't update this cookiestore after getting response.
      */
-    public ConnectionBuilder addCookiesFromStore(CookieStore cookie){
-        this.cookies.addAll(cookie);
+    public ConnectionBuilder addCookies(CookieStore cookies){
+        this.cookies.addAll(cookies);
         return this;
     }
 
     /** Adds a cookie to Cookie header of request. **/
-    public ConnectionBuilder addcookie(String key, String value){
+    public ConnectionBuilder addCookie(String key, String value){
         this.cookies.setCookie(key, value);
         return this;
     }
@@ -222,14 +225,6 @@ public class ConnectionBuilder {
     }
 
     /**
-     * Writes URLEncoded values in the body of request. Only use for POST requests.
-     * @param addContentTypeHeader specifies whether to add ContentType header with value application_x_www_form_url
-     */
-    public ConnectionBuilder writeUrlEncoded(boolean addContentTypeHeader, UrlEncoder encoder){
-        return write(addContentTypeHeader, encoder.encode(Charset.forName("UTF-8")));
-    }
-
-    /**
      * If this request is POST, url encoded value will be put in the body of request.
      * If method is GET, this url encoded value will be appended to URL.
      * <p>ex:
@@ -243,49 +238,45 @@ public class ConnectionBuilder {
      * </p>
      */
     public ConnectionBuilder writeUrlEncoded(UrlEncoder encoder){
+        return write(Header.ContentType.form_urlencoded, encoder.encode());
+    }
 
-        return write(headers.getHeader(Header.ContentType.key) == null, encoder.encode(Charset.forName("UTF-8")));
+    /** Specifies Content-Type asapplication/json and writes jsonString to the output **/
+    public ConnectionBuilder writeJson(String jsonString){
+        return write(Header.ContentType.appJson, jsonString);
+    }
+
+    /** Specifies Content-Type as application/xml and writes xml to the output **/
+    public ConnectionBuilder writeXml(String jsonString){
+        return write(Header.ContentType.appXml, jsonString);
+    }
+
+    /** Appends Content-Type header and writes data to the output **/
+    public ConnectionBuilder write(Header.ContentType contentType, String data){
+        headers.addUnique(contentType);
+        return write(data);
+    }
+
+    /** Appends Content-Type header and writes data to the output **/
+    public ConnectionBuilder write(String contentType, String data){
+        headers.addUnique(Header.ContentType.with(contentType));
+        return write(data);
+    }
+
+    /** writes data to the output **/
+    public ConnectionBuilder write(@NotNull String data){
+        return write(data.getBytes(Charsets.utf_8));
+    }
+
+
+    /** writes data to the output **/
+    public ConnectionBuilder write(String contentType, byte[] data){
+        headers.addUnique(Header.ContentType.with(contentType));
+        return write(data);
     }
 
     /**
-     * If this request is POST, url encoded value will be put in the body of request.
-     * If method is GET, this url encoded value will be appended to URL.
-     * <p>ex:
-     * <br>
-     * url: www.google.com/ajax_test
-     * <br>
-     * UrlEncodedValues: key1=value1&key2=value2
-     *<br>
-     * result:
-     * www.google.com/ajax_test?key1=value1&key2=value2
-     * </p>
-     *
-     * @param addContentTypeHeader specifies whether to add ContentType header with value application_x_www_form_url
-     */
-    public ConnectionBuilder writeUrlEncoded(boolean addContentTypeHeader, String key, String value){
-        return write(addContentTypeHeader, new UrlEncoder().add(key, value).encode(Charset.forName("UTF-8")));
-    }
-
-    /**
-     * If this request is POST, url encoded value will be put in the body of request.
-     * If method is GET, this url encoded value will be appended to URL.
-     * <p>ex:
-     * <br>
-     * url: www.google.com/ajax_test
-     * <br>
-     * UrlEncodedValues: key1=value1&key2=value2
-     *<br>
-     * result:
-     * www.google.com/ajax_test?key1=value1&key2=value2
-     * </p>
-     *
-     * @param addContentTypeHeader specifies whether to add ContentType header with value application_x_www_form_url
-     */
-    public ConnectionBuilder write(boolean addContentTypeHeader, String s){
-        return write(addContentTypeHeader, s.getBytes(Charset.forName("UTF-8")));
-    }
-
-    /**
+     * <p><b>Output must always be encoded with UTF-8, if it's a string</b></p>
      * If this request is POST, url encoded value will be put in the body of request.
      * If method is GET, this url encoded value will be appended to URL.
      * <p>ex:
@@ -298,29 +289,7 @@ public class ConnectionBuilder {
      * www.google.com/ajax_test?key1=value1&key2=value2
      * </p>
      */
-    public ConnectionBuilder write(String s){
-        return write(false, s.getBytes(Charset.forName("UTF-8")));
-    }
-
-    /**
-     * If this request is POST, url encoded value will be put in the body of request.
-     * If method is GET, this url encoded value will be appended to URL.
-     * <p>ex:
-     * <br>
-     * url: www.google.com/ajax_test
-     * <br>
-     * UrlEncodedValues: key1=value1&key2=value2
-     *<br>
-     * result:
-     * www.google.com/ajax_test?key1=value1&key2=value2
-     * </p>
-     *
-     * @param addContentTypeHeader specifies whether to add ContentType header with value application_x_www_form_url
-     */
-    public ConnectionBuilder write(boolean addContentTypeHeader, byte[] data){
-        if (addContentTypeHeader){
-            headers.addUnique(Header.ContentType.application_x_www_form_url);
-        }
+    public ConnectionBuilder write(byte[] data){
         this.output = data;
         return this;
     }
@@ -356,14 +325,24 @@ public class ConnectionBuilder {
         if (allowRedirectChanged) javaCon.setInstanceFollowRedirects(followRedirect);
         if (useCacheChanged) javaCon.setUseCaches(useCache);
 
+        preprocessHeaders(url);
+        for (Header header : headers) {
+            javaCon.addRequestProperty(header.key, header.value);
+        }
         if (output != null && !Http.GET.equals(method)){
             javaCon.setDoOutput(true);
         }
 
-        for (Header header : headers) {
-            javaCon.addRequestProperty(header.key, header.value);
-        }
         return new Request(javaCon, url, method, output, headers, this);
+    }
+
+    private void preprocessHeaders(URL url) {
+        if (Http.autoAddHostHeader){
+            headers.replaceIfNotPresent(Header.Host.fromUrl(url));
+        }
+        if (Http.GET.equalsIgnoreCase(method)) {
+            headers.remove(Header.ContentType.key);
+        }
     }
 
     public Response send() throws ConnectionException {
@@ -419,12 +398,20 @@ public class ConnectionBuilder {
         return new URL(fullQuery);
     }
 
-    private static String combineUrl(String baseUrl, String path) {
+    private static String combineUrl(String baseUrl, @Nullable String path) {
         if (StringUtils.isEmpty(baseUrl)) throw new RuntimeException("Base url must not be empty");
         if (StringUtils.isEmpty(path)) return baseUrl;
         baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         path = path.startsWith("/") ? path : "/" + path;
         return baseUrl + path;
+    }
+
+    private static String combineUrl(String baseUrl, String path, String query) {
+        String url = combineUrl(baseUrl, path);
+        if (StringUtils.isEmpty(query)) return url;
+        url = url.endsWith("?") ? url.substring(0, url.length() - 1) : url;
+        query = query.startsWith("?") ? query : "?" + query;
+        return url + query;
     }
 
     private HttpURLConnection openConnection(URL url) throws IOException {
@@ -461,6 +448,7 @@ public class ConnectionBuilder {
         return stringUrl;
     }
 
+    @Nullable
     byte[] getOutput() {
         return output;
     }

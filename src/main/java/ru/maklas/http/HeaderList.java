@@ -25,13 +25,11 @@ public class HeaderList implements Iterable<Header> {
 
     /** Adds header. If there already was a header with the same Key, it gets replaced **/
     public HeaderList addUnique(Header header) {
-        String key = header == null ? null : header.key;
+        if (header == null || header.key == null) return this;
+        String key = header.key;
         int targetIndex = -1;
         for (int i = 0; i < headers.size; i++) {
-            Header h = headers.get(i);
-            if ((key == null && header == null)
-                    || (key == h.key)
-                    || (key != null && key.equals(h.key))){
+            if (key.equalsIgnoreCase(headers.get(i).key)){
                 targetIndex = i;
                 break;
             }
@@ -42,6 +40,15 @@ public class HeaderList implements Iterable<Header> {
             headers.set(targetIndex, header);
         }
         return this;
+    }
+
+    public void remove(String key) {
+        Iterator<Header> iter = headers.iterator();
+        while (iter.hasNext()){
+            if (key.equalsIgnoreCase(iter.next().key)){
+                iter.remove();
+            }
+        }
     }
 
     /** Doesn't care about case **/
@@ -87,6 +94,18 @@ public class HeaderList implements Iterable<Header> {
                     .append(header.value).append('\n');
         }
         return builder.toString();
+    }
+
+    public HeaderList replaceIfNotPresent(Header header) {
+        if (header == null || header.key == null) return this;
+        String key = header.key;
+        for (int i = 0; i < headers.size; i++) {
+            if (key.equals(headers.get(i).key)){
+                return this;
+            }
+        }
+        headers.add(header);
+        return this;
     }
 }
 

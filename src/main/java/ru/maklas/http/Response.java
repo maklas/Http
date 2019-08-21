@@ -21,8 +21,6 @@ import java.util.zip.GZIPInputStream;
 
 public class Response {
 
-    private static final Charset utf8 = Charset.forName("UTF-8");
-
     private final HttpURLConnection javaCon;
     private final URL requestUrl;
     private final int msToConnect;
@@ -251,7 +249,7 @@ public class Response {
     }
 
     private Charset getCharset(){
-        return charset == null ? utf8 : charset;
+        return charset == null ? Charsets.utf_8 : charset;
     }
 
     private InputStream wrapStream(InputStream is) throws IOException {
@@ -326,9 +324,9 @@ public class Response {
             for (Header requestHeader : requestHeaders) {
                 w.print("  "); w.println(requestHeader);
             }
-            if (!Http.GET.equalsIgnoreCase(getRequest().getBuilder().getMethod()) && getRequest().getSendingBody() != null) {
+            if (!Http.GET.equalsIgnoreCase(getRequest().getBuilder().getMethod()) && getRequest().getOutput() != null) {
                 w.println("Body:");
-                w.println(new String(getRequest().getSendingBody(), Charset.forName("UTF-8")));
+                w.println(new String(getRequest().getOutput(), Charsets.utf_8));
             }
             w.println();
             w.println("------- RESPONSE -------");

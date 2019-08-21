@@ -42,8 +42,14 @@ public class Request {
 
     /** Data written to output **/
     @Nullable
-    public byte[] getSendingBody() {
+    public byte[] getOutput() {
         return output;
+    }
+
+    /** Data written to output **/
+    @Nullable
+    public String getOutputAsString() {
+        return output == null ? null : new String(output, Charsets.utf_8);
     }
 
     /** Data written to output **/

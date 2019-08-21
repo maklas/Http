@@ -197,13 +197,20 @@ public class Header extends KeyValuePair {
     }
 
     //В ответе от сервера. Указывает какой вид контента содержится в теле. (MIME-type)
-    public static class ContentType{
-        public static final String key                          = "Content-Type";
-        public static final Header application_x_www_form_url   = new Header(key, "application/x-www-form-urlencoded; charset=UTF-8");
-        public static final Header textHtml                     = new Header(key, "text/html; charset=UTF-8");
-        public static final Header textPlain                    = new Header(key, "text/plain; charset=UTF-8");
-        public static final Header applicationJson              = new Header(key, "application/json; charset=UTF-8");
-        public static final Header applicationJS                = new Header(key, "application/javascript; charset=UTF-8");
+    public static class ContentType extends Header {
+        public static final String key                  = "Content-Type";
+        public static final ContentType textPlain       = new ContentType("text/plain; charset=UTF-8");
+        public static final ContentType textHtml        = new ContentType("text/html; charset=UTF-8");
+        public static final ContentType textXml         = new ContentType("text/xml; charset=UTF-8");
+        public static final ContentType appXml          = new ContentType("application/xml; charset=UTF-8");
+        public static final ContentType appJson         = new ContentType("application/json; charset=UTF-8");
+        public static final ContentType appJS           = new ContentType("application/javascript; charset=UTF-8");
+        public static final ContentType form_urlencoded = new ContentType("application/x-www-form-urlencoded; charset=UTF-8");
+        public static final ContentType formData        = new ContentType("multipart/form-data; charset=UTF-8");
+
+        ContentType(String value) {
+            super(key, value);
+        }
 
         public static Header with(String val){
             return new Header(key, val);

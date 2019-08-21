@@ -125,7 +125,7 @@ public class ConnectionException extends Exception {
             }
             if (builder.getOutput() != null) {
                 w.println("HTTP Body:");
-                w.println(new String(builder.getOutput(), Charset.forName("UTF-8")));
+                w.println(new String(builder.getOutput(), Charsets.utf_8));
             }
             w.println();
             w.println("Exception Type: " + type + ". Trace:");

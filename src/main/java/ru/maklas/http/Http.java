@@ -17,6 +17,7 @@ public class Http {
     static int defaultConnectTimeOut = 10_000;
     static int defaultReadTimeOut = 20_000;
     static boolean fetchJavaHeaders = false;
+    static boolean autoAddHostHeader = true;
 
     @Nullable
     public static String getResponseCodeMeaning(int code, String def){
@@ -63,6 +64,11 @@ public class Http {
             case 505 : return "HTTP Version not supported";
             default: return def;
         }
+    }
+
+    /** Whether to add Host header automatically with every request. Default is true**/
+    public static void setAutoAddHostHeader(boolean enabled){
+        autoAddHostHeader = enabled;
     }
 
     public static void setDefaultCookieHandlerByJFX(boolean enabled){
