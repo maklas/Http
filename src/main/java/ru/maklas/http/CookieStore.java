@@ -5,13 +5,16 @@ import com.badlogic.gdx.utils.Consumer;
 import com.badlogic.gdx.utils.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
+/** Storage for cookies. Stores cookies and manages cookie changes **/
 public class CookieStore implements Iterable<Cookie>{
 
+    public static final Predicate<Cookie> COOKIE_PREDICATE_ALLOW_ALL = (c) -> true;
     private Array<Cookie> cookies;
-    private Predicate<Cookie> cookieChangePredicate = (c) -> true;
+    private Predicate<Cookie> cookieChangePredicate = COOKIE_PREDICATE_ALLOW_ALL;
 
     public CookieStore() {
         cookies = new Array<>();
@@ -23,8 +26,9 @@ public class CookieStore implements Iterable<Cookie>{
      */
     public String setCookie(String key, String value){
         if (key == null) throw new RuntimeException("Cookie key must not be null");
-        if (Cookie.shouldBeDeleted(value))
+        if (Cookie.shouldBeDeleted(value)) {
             return remove(key);
+        }
 
 
         for (Cookie cookie : cookies) {
@@ -35,8 +39,29 @@ public class CookieStore implements Iterable<Cookie>{
             }
         }
 
-
         cookies.add(new Cookie(key, value));
+        return null;
+    }
+
+
+    /**
+     * @return null if there was no cookie before, otherwise returns old cookie value
+     * which is never null or empty string.
+     */
+    public String setCookie(Cookie cookie){
+        if (Cookie.shouldBeDeleted(cookie.getValue())) {
+            return remove(cookie.getKey());
+        }
+
+        for (Cookie c : cookies) {
+            if (c.getKey().equals(cookie.getKey())){
+                String oldValue = c.getValue();
+                c.update(cookie);
+                return oldValue;
+            }
+        }
+
+        cookies.add(cookie);
         return null;
     }
 
@@ -49,6 +74,16 @@ public class CookieStore implements Iterable<Cookie>{
     /** @return null if there is no cookie with this name **/
     public String getCookie(String key){
         return getCookie(key, null);
+    }
+
+    /** @return null if there is no cookie with this name **/
+    public Cookie getCookieFull(String key){
+        for (Cookie cookie : cookies) {
+            if (cookie.getKey().equals(key)){
+                return cookie;
+            }
+        }
+        return null;
     }
 
     /** @return default value if there is no cookie with this name **/
@@ -115,7 +150,7 @@ public class CookieStore implements Iterable<Cookie>{
         return cookieChangePredicate;
     }
 
-    public void setCookieChangePredicate(Predicate<Cookie> cookieChangePredicate) {
+    public void setCookieChangePredicate(@Nullable Predicate<Cookie> cookieChangePredicate) {
         if (cookieChangePredicate == null){
             cookieChangePredicate = (c) -> true;
         }
@@ -124,12 +159,24 @@ public class CookieStore implements Iterable<Cookie>{
 
     @Override
     public String toString() {
+        if (cookies.size == 0) return "";
         StringBuilder builder = new StringBuilder();
         for (Cookie cookie : cookies) {
             builder.append(cookie.getKey())
                     .append(" = ")
                     .append(cookie.getValue()).append('\n');
         }
+        builder.setLength(builder.length() - 1);
+        return builder.toString();
+    }
+
+    public String toStringFull() {
+        if (cookies.size == 0) return "";
+        StringBuilder builder = new StringBuilder();
+        for (Cookie cookie : cookies) {
+            builder.append(cookie).append('\n');
+        }
+        builder.setLength(builder.length() - 1);
         return builder.toString();
     }
 

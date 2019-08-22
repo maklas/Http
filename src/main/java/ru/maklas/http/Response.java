@@ -46,8 +46,9 @@ public class Response {
         this.responseCode = javaCon.getResponseCode();
         this.responseMessage = javaCon.getResponseMessage();
         ResponseHeaders headers = getHeaders();
-        if (request.getBuilder().getAssignedCookieStore() != null)
-            cookieChangeList = headers.updateCookiesIfChanged(request.getBuilder().getAssignedCookieStore());
+        if (request.getBuilder().getAssignedCookieStore() != null) {
+            cookieChangeList = headers.updateCookiesIfChanged(javaCon.getURL(), request.getBuilder().getAssignedCookieStore());
+        }
         _getBody();
         javaCon.disconnect();
         if (callback != null) callback.finished(this);
@@ -166,7 +167,11 @@ public class Response {
         return locationHeader == null ? null : locationHeader.value;
     }
 
-    /** Changelist of cookies after this response. Which were added or removed **/
+    /**
+     * Changelist of cookies after this response. Which were added or removed.
+     * Is <b>null</b> if no cookieStore was assigned in ConnectionBuilder
+     */
+    @Nullable
     public CookieChangeList getCookieChangeList() {
         return cookieChangeList;
     }

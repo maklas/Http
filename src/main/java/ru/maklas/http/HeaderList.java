@@ -51,7 +51,7 @@ public class HeaderList implements Iterable<Header> {
         }
     }
 
-    /** Doesn't care about case **/
+    /** Doesn't care about upper/lower case **/
     public Header getHeader(String key){
         return getHeader(key, false);
     }

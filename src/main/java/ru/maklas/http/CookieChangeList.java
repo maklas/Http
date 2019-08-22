@@ -2,21 +2,28 @@ package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Consumer;
+import com.badlogic.gdx.utils.Predicate;
 
+/** Change history of cookies after Http response. **/
 public class CookieChangeList{
 
-    private Array<CookieChange> changed = new Array<>();
-    private Array<CookieChange> ignored = new Array<>();
+    private Array<CookieChange> changed = new Array<>(5);
+    private Array<CookieChange> ignored = new Array<>(1);
 
 
     public CookieChangeList() {
 
     }
 
+    /** Cookies that were changed/deleted **/
     public Array<CookieChange> getChanged() {
         return changed;
     }
 
+    /**
+     * Cookies that were ignored due to cookie filter set by
+     * {@link CookieStore#setCookieChangePredicate(Predicate)}
+     */
     public Array<CookieChange> getIgnored() {
         return ignored;
     }
@@ -52,7 +59,7 @@ public class CookieChangeList{
         return builder.toString();
     }
 
-    private static void  toString(CookieChange change, StringBuilder builder, boolean ignored){
+    private static void toString(CookieChange change, StringBuilder builder, boolean ignored){
         builder.append(change.key);
         builder.append(": ");
         changeValueToString(change.oldValue, builder);
