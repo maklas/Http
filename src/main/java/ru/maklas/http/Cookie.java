@@ -209,6 +209,9 @@ public class Cookie {
                     } catch (Throwable ignore) { }
                 } else if ("Domain".equalsIgnoreCase(mKey)){
                     domain = mValue.length() > 0 && mValue.charAt(0) == '.' ? mValue.substring(1) : mValue;
+                    if (domain.startsWith("www")){
+                    	domain = domain.substring(3);
+					}
                 } else if ("Path".equalsIgnoreCase(mKey)){
                     path = mValue;
                 }

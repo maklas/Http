@@ -304,13 +304,16 @@ public class ConnectionBuilder {
         if (built) throw new ConnectionException(ConnectionException.Type.USED, "This builder has already been used", null, this, null);
         built = true;
         this.buildStarted = System.currentTimeMillis();
-        if (cookies.size() > 0) headers.addUnique(cookies.toHeader());
         URL url = null;
         try {
             url = buildUrl();
         } catch (MalformedURLException e) {
             throw new ConnectionException(ConnectionException.Type.BAD_URL, e, this, null);
         }
+        if (cookies.size() > 0) {
+            headers.add(cookies.removeByHost(url.getHost()).toHeader());
+        }
+
         HttpURLConnection javaCon = null;
         try {
             javaCon = openConnection(url);

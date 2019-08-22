@@ -17,7 +17,7 @@ public class CookieStore implements Iterable<Cookie>{
     private Predicate<Cookie> cookieChangePredicate = COOKIE_PREDICATE_ALLOW_ALL;
 
     public CookieStore() {
-        cookies = new Array<>();
+        cookies = new Array<>(5);
     }
 
     /**
@@ -129,6 +129,17 @@ public class CookieStore implements Iterable<Cookie>{
     public Header toHeader(){
         if (cookies.size == 0) return null;
         return new Header(Cookie.headerKey, toHeaderString());
+    }
+
+    CookieStore removeByHost(String host){
+        Array.ArrayIterator<Cookie> it = new Array.ArrayIterator<>(this.cookies);
+        while (it.hasNext()){
+            Cookie next = it.next();
+            if (StringUtils.isNotEmpty(next.getDomain()) && !host.endsWith(next.getDomain())){
+                it.remove();
+            }
+        }
+        return this;
     }
 
     public String toHeaderString() {
