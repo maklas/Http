@@ -1,5 +1,6 @@
 package ru.maklas.http;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
@@ -14,8 +15,8 @@ public class Cookie {
     public static final String headerKey = "Cookie";
     public static final String DELETED = "deleted";
 
-    private final String key;
-    private String value;
+    final String key;
+    volatile String value;
     private boolean deleted;
     private long created;
     private long expires = -1;
@@ -25,17 +26,32 @@ public class Cookie {
     private boolean secure;
     private boolean httpOnly;
 
+
     public Cookie(Cookie cookie) {
         this.key = cookie.key;
         update(cookie);
     }
 
+    /**
+     * <p>
+     *     <b>Warning!</b>
+     * </p>
+     * <p>
+     *     A cookie created this way might have empty domain. Meaning it will be used for any url.
+     *     A much safer choice - Creating cookies with domain name specified.
+     * </p>
+     */
     public Cookie(String key, String value) {
         if (key == null) throw new RuntimeException();
         this.key = key;
         this.deleted = shouldBeDeleted(value);
         this.value =  deleted ? DELETED : value;
         this.created = System.currentTimeMillis();
+    }
+
+    public Cookie(String key, String value, String domain) {
+        this(key, value);
+        setDomain(domain);
     }
 
     void update(Cookie cookie) {
@@ -91,13 +107,30 @@ public class Cookie {
         this.maxAge = maxAge;
     }
 
-    /** Specifies those hosts to which the cookie will be sent. If not specified, defaults to the host portion of the current document location **/
+    /**
+     *  Specifies those hosts to which the cookie will be sent.
+     *  If empty, means it was created manualy and will be allowed for any url
+     */
     public String getDomain() {
         return domain != null ? domain : "";
     }
 
+    /**
+     * <li>.example.com -> example.com</li>
+     * <li>www.example.com -> example.com</li>
+     * <li>.www.example.com -> example.com</li>
+     * <li>eXamPle.com -> example.com</li>
+     */
     public void setDomain(String domain) {
-        this.domain = domain;
+        this.domain = formatDomain(domain);
+    }
+
+    private static String formatDomain(String unformatted){
+        if (unformatted != null){
+            unformatted = unformatted.startsWith(".") ? unformatted.substring(1) : unformatted;
+            return unformatted.startsWith("www.") ? unformatted.substring(4).toLowerCase() : unformatted.toLowerCase();
+        }
+        return null;
     }
 
     /** Indicates a URL path that must exist in the requested resource before sending the Cookie. Can be empty **/
@@ -136,6 +169,15 @@ public class Cookie {
 
     public boolean isMaxAgeSet(){
         return maxAge != -1;
+    }
+
+    public boolean appliesToDomain(@NotNull String domain){
+        domain = domain.toLowerCase();
+        return StringUtils.isNotEmpty(this.domain) &&
+                (this.domain.equals(domain) ||
+                        (domain.length() > this.domain.length() &&
+                                domain.endsWith(this.domain) &&
+                                domain.charAt(domain.length() - this.domain.length() - 1) == '.'));
     }
 
     /**
@@ -183,12 +225,16 @@ public class Cookie {
         } else {
             cookie = new Cookie(keyValuePart[0].trim(), keyValuePart[1].trim());
         }
-        cookie.fillFields(url, portions);
+        try {
+            cookie.fillAttributes(url.getHost().toLowerCase(), portions);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
         return cookie;
     }
 
     //Fills other fields : httpOnly, secure, expires, maxAge, domain, path.
-    private void fillFields(URL url, String[] portions) {
+    private void fillAttributes(String lowerCaseHost, String[] portions) {
         for (int i = 1; i < portions.length; i++) {
             String[] split = portions[i].split("=");
             if (split.length == 1) {
@@ -208,10 +254,11 @@ public class Cookie {
                         maxAge = Integer.parseInt(mValue);
                     } catch (Throwable ignore) { }
                 } else if ("Domain".equalsIgnoreCase(mKey)){
-                    domain = mValue.length() > 0 && mValue.charAt(0) == '.' ? mValue.substring(1) : mValue;
-                    if (domain.startsWith("www")){
-                    	domain = domain.substring(3);
-					}
+                    String domain = formatDomain(mValue);
+                    if (domain.equals(lowerCaseHost) ||
+                            (domain.length() > lowerCaseHost.length() && domain.endsWith(lowerCaseHost) && domain.charAt(domain.length() - lowerCaseHost.length() - 1) == '.')) {
+                        this.domain = domain;
+                    }
                 } else if ("Path".equalsIgnoreCase(mKey)){
                     path = mValue;
                 }
@@ -219,50 +266,72 @@ public class Cookie {
         }
 
         if (domain == null){
-            domain = url.getHost();
+            setDomain(lowerCaseHost);
         }
+
         if (path == null){
             path = "";
         }
     }
 
     private static long parseExpires(String date) {
-        if (date.length() == 29){
+        if (date.length() == 29){ //Sun, 06 Nov 1994 08:49:37 GMT
             try {
-                return parseDate(date);
+                return parseDate29(date);
             } catch (Exception e) {
                 try {
-                    return parseDateJava(date);
+                    return parseDateJava29(date);
                 } catch (ParseException e1) {
                     return -1;
                 }
             }
+        } else if (date.length() == 24){ //Sun Nov  6 08:49:37 1994
+            try {
+                return parseDate24(date);
+            } catch (Throwable e){
+                try {
+                    return parseDateJava24(date);
+                } catch (Exception e1) {
+                    return -1;
+                }
+            }
         }
-        try {
-            return parseDateJava(date);
-        } catch (ParseException e) {
-            return -1;
-        }
+        return -1;
     }
 
-    private static long parseDateJava(String httpDate) throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.UK);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+    private static long parseDateJava29(String httpDate) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
         return sdf.parse(httpDate).getTime();
     }
 
-    private static long parseDate(String httpDate){
+    private static long parseDateJava24(String httpDate) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return sdf.parse(httpDate).getTime();
+    }
+
+    //RFC 822, updated by RFC 1123 -> Sun, 06 Nov 1994 08:49:37 GMT
+    private static long parseDate29(String httpDate){
         int day = Integer.parseInt(httpDate.substring(5, 7));
-        String month = httpDate.substring(8, 11);
+        int month = parseMonth(httpDate.substring(8, 11));
         int year = Integer.parseInt(httpDate.substring(12, 16));
         int hrs = Integer.parseInt(httpDate.substring(17, 19));
         int mins = Integer.parseInt(httpDate.substring(20, 22));
         int secs = Integer.parseInt(httpDate.substring(23, 25));
+        return toEpochSec(day, month, year, hrs, mins, secs);
+    }
 
-        final int secInDay = 86400;
-        final int secInHr = 3600;
-        final int secInMin = 60;
-        return (secBeforeYear(year) + secBeforeMonth(year, parseMonth(month)) + ((day - 1) * secInDay) + (hrs * secInHr) + (mins * secInMin) + secs) * 1000L;
+    //ANSI C's asctime() format -> Sun Nov  6 08:49:37 1994
+    private static long parseDate24(String httpDate){
+        int day = Integer.parseInt(httpDate.substring(8, 10).trim());
+        int month = parseMonth(httpDate.substring(4, 7));
+        int year = Integer.parseInt(httpDate.substring(20, 24));
+        int hrs = Integer.parseInt(httpDate.substring(11, 13));
+        int mins = Integer.parseInt(httpDate.substring(14, 16));
+        int secs = Integer.parseInt(httpDate.substring(17, 19));
+
+        return toEpochSec(day, month, year, hrs, mins, secs);
     }
 
     private static int parseMonth(String month) {
@@ -309,6 +378,13 @@ public class Cookie {
 
     private static boolean isLeapYear(int year) {
         return year % 400 == 0 || (year % 100 != 0 && year % 4 == 0);
+    }
+
+    private static long toEpochSec(int day, int month, int year, int hrs, int mins, int secs) {
+        final int secInDay = 86400;
+        final int secInHr = 3600;
+        final int secInMin = 60;
+        return (secBeforeYear(year) + secBeforeMonth(year, month) + ((day - 1) * secInDay) + (hrs * secInHr) + (mins * secInMin) + secs) * 1000L;
     }
 
     @Override

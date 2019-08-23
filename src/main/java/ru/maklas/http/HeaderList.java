@@ -14,10 +14,12 @@ public class HeaderList implements Iterable<Header> {
         return headers.iterator();
     }
 
+    /** Adds all the cookies. Duplicates are allowed **/
     public void addAll(HeaderList headers) {
         this.headers.addAll(headers.headers);
     }
 
+    /** Adds a header. Duplicates are allowed **/
     public HeaderList add(Header header) {
         headers.add(header);
         return this;
@@ -96,7 +98,7 @@ public class HeaderList implements Iterable<Header> {
         return builder.toString();
     }
 
-    public HeaderList replaceIfNotPresent(Header header) {
+    public HeaderList addIfNotPresent(Header header) {
         if (header == null || header.key == null) return this;
         String key = header.key;
         for (int i = 0; i < headers.size; i++) {

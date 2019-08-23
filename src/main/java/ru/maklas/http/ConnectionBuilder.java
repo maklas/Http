@@ -14,11 +14,11 @@ public class ConnectionBuilder {
 
     public static final Pattern PROTOCOL_PATTERN = Pattern.compile("^[.\\-+a-zA-Z0-9]+://.+");
 
-    private String stringUrl;
+    private final String method;
+    private String stringUrl; //Either of url or stringUrl must be set
     private URL url;
-    private String method = Http.GET;
-    private HeaderList headers = new HeaderList();
-    private CookieStore cookies = new CookieStore();
+    private HeaderList headers = new HeaderList(); //Headers that will be send
+    private Array<Cookie> cookies = new Array<>(); //Cookie store that will be used to produce Cookie header
     private ProxyData proxy;
     private boolean allowRedirectChanged = false;
     private boolean followRedirect = true;
@@ -26,13 +26,14 @@ public class ConnectionBuilder {
     private boolean useCache = false;
     private byte[] output = null;
     private boolean built = false;
-    private CookieStore assignedCookieStore;
+    private CookieStore assignedCookieStore; //Cookie database that will be changed according to set-cookie header
 
-    /** Use {@link ConnectionBuilder#get(String) .get()} or  {@link ConnectionBuilder#post(String) .post()} instead **/
-    public ConnectionBuilder() { }
+    public ConnectionBuilder(@NotNull @MagicConstant(valuesFromClass = Http.class) String method) {
+        this.method = method;
+    }
 
     public ConnectionBuilder cpy(){
-        ConnectionBuilder cb = new ConnectionBuilder();
+        ConnectionBuilder cb = new ConnectionBuilder(method);
         cpy(cb);
         return cb;
     }
@@ -40,7 +41,6 @@ public class ConnectionBuilder {
     private void cpy(ConnectionBuilder cb){
         cb.stringUrl = stringUrl;
         cb.url = url;
-        cb.method  = method;
         cb.headers.addAll(headers);
         cb.cookies.addAll(cookies);
         cb.proxy = proxy;
@@ -58,24 +58,22 @@ public class ConnectionBuilder {
 
     /** new ConnectionBuilder starting with get method request **/
     public static ConnectionBuilder get(){
-        return new ConnectionBuilder().method(Http.GET);
+        return new ConnectionBuilder(Http.GET);
     }
 
     /** new ConnectionBuilder starting with POST method request and defaultHeaders included **/
     public static ConnectionBuilder post(){
-        return new ConnectionBuilder().method(Http.POST);
+        return new ConnectionBuilder(Http.POST);
     }
 
     /** new ConnectionBuilder starting with get method request **/
     public static ConnectionBuilder get(String url){
-        return new ConnectionBuilder()
-                .method(Http.GET).url(url);
+        return new ConnectionBuilder(Http.GET).url(url);
     }
 
     /** new ConnectionBuilder starting with pot method request **/
     public static ConnectionBuilder post(String url){
-        return new ConnectionBuilder()
-                .method(Http.POST).url(url);
+        return new ConnectionBuilder(Http.POST).url(url);
     }
 
     /** new ConnectionBuilder starting with get method request **/
@@ -108,12 +106,6 @@ public class ConnectionBuilder {
     /** Specify connection address. **/
     public ConnectionBuilder url(URL url){
         this.url = url;
-        return this;
-    }
-
-    /** @see Http **/
-    public ConnectionBuilder method(@MagicConstant(valuesFromClass = Http.class) String httpMethod){
-        this.method = httpMethod;
         return this;
     }
 
@@ -173,27 +165,80 @@ public class ConnectionBuilder {
     }
 
     /**
-     * Only fetches cookies from the store into Cookie header of the request.
-     * Doesn't update this cookiestore after getting response.
+     * <p>
+     *     Only fetches cookies from the store into Cookie header of the request.
+     *     Doesn't update this CookieStore after getting response.
+     *     Doesn't change cookies at all.
+     *     <b>Cookie with non-empty and non-url-matching domain won't be added to the request.</b>
+     * </p>
+     * <p>
+     *     <b>Use when:</b>
+     *     <li>You have specific set of cookies and don't want them to be altered in any way by the request</li>
+     * </p>
      */
     public ConnectionBuilder addCookies(CookieStore cookies){
-        this.cookies.addAll(cookies);
+        for (Cookie cookie : cookies) {
+            addCookie(cookie);
+        }
         return this;
     }
 
-    /** Adds a cookie to Cookie header of request. **/
+    /**
+     * <p>
+     *     Adds a cookie to Cookie header of request. Will replace old cookie with the same key.
+     *     <b>Will have empty domain specified, meaning that it will definitely be added to the request.</b>
+     * </p>
+     * <p>
+     *     <b>Use when:</b>
+     *     <li>You have specific set of cookies and don't want them to be altered in any way by the request</li>
+     *     <li>You need to build a fast request without hassle of creating CookieStore</li>
+     * </p>
+     */
     public ConnectionBuilder addCookie(String key, String value){
-        this.cookies.setCookie(key, value);
+        return addCookie(new Cookie(key, value));
+    }
+
+    /**
+     * <p>
+     *      Adds a cookie to Cookie header of request. Will replace old cookie with the same key.
+     *     <b>Cookie with non-empty and non-url-matching domain won't be added to the request.</b>
+     * </p>
+     */
+    public ConnectionBuilder addCookie(Cookie cookie){
+        Array<Cookie> cookies = this.cookies;
+        for (int i = 0; i < cookies.size; i++) {
+            if (cookies.get(i).key.equals(cookie.key)) {
+                cookies.set(i, cookie);
+                return this;
+            }
+        }
+
+        cookies.add(cookie);
         return this;
     }
 
-    /** Do this requesst using proxy **/
+    /**
+     * <p>
+     *    Assigns cookies from the store and uses it in Cookie header.
+     *    If this request succeed, cookies will be affected by Set-Cookie header.
+     *     <b>Cookie with non-empty and non-url-matching domain won't be added to the request.</b>
+     * </p>
+     */
+    public ConnectionBuilder assignCookieStore(CookieStore cookieStore) {
+        for (Cookie cookie : cookieStore) {
+            addCookie(cookie);
+        }
+        this.assignedCookieStore = cookieStore;
+        return this;
+    }
+
+    /** Do this request using proxy **/
     public ConnectionBuilder proxy(@Nullable ProxyData data){
         this.proxy = data;
         return this;
     }
 
-    /** Do this requesst using proxy **/
+    /** Do this request using proxy **/
     public ConnectionBuilder proxy(String address, int port){
         this.proxy = new ProxyData(address, port);
         return this;
@@ -210,17 +255,6 @@ public class ConnectionBuilder {
     public ConnectionBuilder cache(boolean enabled){
         this.useCacheChanged = true;
         this.useCache = enabled;
-        return this;
-    }
-
-    /**
-     * Assigns this cookie store and use it in Cookie header.
-     * If this request succeed, Cookies will be updated according to their predicate,
-     */
-    public ConnectionBuilder assignCookieStore(CookieStore cookieStore) {
-        if (cookieStore == null) return this;
-        cookies.addAll(cookieStore);
-        this.assignedCookieStore = cookieStore;
         return this;
     }
 
@@ -310,8 +344,10 @@ public class ConnectionBuilder {
         } catch (MalformedURLException e) {
             throw new ConnectionException(ConnectionException.Type.BAD_URL, e, this, null);
         }
-        if (cookies.size() > 0) {
-            headers.add(cookies.removeByHost(url.getHost()).toHeader());
+
+        Header cookieHeader = buildCookieHeader(url);
+        if (cookieHeader != null) {
+            headers.add(cookieHeader);
         }
 
         HttpURLConnection javaCon = null;
@@ -339,11 +375,29 @@ public class ConnectionBuilder {
         return new Request(javaCon, url, method, output, headers, this);
     }
 
-    private void preprocessHeaders(URL url) {
-        if (Http.autoAddHostHeader){
-            headers.replaceIfNotPresent(Header.Host.fromUrl(url));
+    private Header buildCookieHeader(URL url) {
+        if (cookies.size == 0) return null;
+        StringBuilder builder = new StringBuilder();
+        for (Cookie cookie : cookies) {
+            if (StringUtils.isEmpty(cookie.getDomain()) || cookie.appliesToDomain(url.getHost())) {
+                builder
+                        .append(cookie.getKey())
+                        .append("=")
+                        .append(cookie.getValue())
+                        .append("; ");
+            }
         }
-        if (Http.GET.equalsIgnoreCase(method)) {
+
+        if (builder.length() <=2) return null;
+        builder.setLength(builder.length() - 2);
+        return new Header(Cookie.headerKey, builder.toString());
+    }
+
+    private void preprocessHeaders(URL url) {
+        if (Http.autoAddHostHeader){ //Adds Host header if not present
+            headers.addIfNotPresent(Header.Host.fromUrl(url));
+        }
+        if (Http.GET.equalsIgnoreCase(method)) { //If it's a GET method, the Content type is not needed.
             headers.remove(Header.ContentType.key);
         }
     }
@@ -353,8 +407,6 @@ public class ConnectionBuilder {
         Response response = request.send();
         return response;
     }
-
-
 
     //************//
     //* PRIVATES *//

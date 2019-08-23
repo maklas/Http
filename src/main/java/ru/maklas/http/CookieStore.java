@@ -24,30 +24,6 @@ public class CookieStore implements Iterable<Cookie>{
      * @return null if there was no cookie before, otherwise returns old cookie value
      * which is never null or empty string.
      */
-    public String setCookie(String key, String value){
-        if (key == null) throw new RuntimeException("Cookie key must not be null");
-        if (Cookie.shouldBeDeleted(value)) {
-            return remove(key);
-        }
-
-
-        for (Cookie cookie : cookies) {
-            if (cookie.getKey().equals(key)){
-                String oldValue = cookie.getValue();
-                cookie.setValue(value);
-                return oldValue;
-            }
-        }
-
-        cookies.add(new Cookie(key, value));
-        return null;
-    }
-
-
-    /**
-     * @return null if there was no cookie before, otherwise returns old cookie value
-     * which is never null or empty string.
-     */
     public String setCookie(Cookie cookie){
         if (Cookie.shouldBeDeleted(cookie.getValue())) {
             return remove(cookie.getKey());
@@ -209,7 +185,7 @@ public class CookieStore implements Iterable<Cookie>{
         for (String s : split) {
             String[] keyValue = s.split("=");
             if (keyValue.length == 2){
-                store.setCookie(StringUtils.trimToEmpty(keyValue[0]), StringUtils.trimToEmpty(keyValue[1]));
+                store.setCookie(new Cookie(StringUtils.trimToEmpty(keyValue[0]), StringUtils.trimToEmpty(keyValue[1])));
             }
         }
 
