@@ -49,3 +49,4 @@ public static void setup(){
 6. No need to worry about url encoding and Content-Type
 7. Supports gzip and deflate Content-Encoding
 8. Much easier to control request timeout.
+9. Add it to your project with [Jitpack](https://jitpack.io/#maklas/Http)!
