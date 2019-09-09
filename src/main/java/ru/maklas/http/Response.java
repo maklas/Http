@@ -186,7 +186,6 @@ public class Response {
                 try {
                     responseUnescaped = unescape(responseBodyAsIs);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     responseUnescaped = responseBodyAsIs;
                 }
             }
