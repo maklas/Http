@@ -1,5 +1,6 @@
 package ru.maklas.http;
 
+import com.badlogic.gdx.utils.ByteArray;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +29,7 @@ public class Response {
     private ResponseHeaders headerCache;
     private boolean unescaped = false;
     private String responseUnescaped;
+    private byte[] responseBytes;
     private String responseBodyAsIs;
     private int responseCode;
     private String responseMessage;
@@ -49,7 +51,7 @@ public class Response {
         if (request.getBuilder().getAssignedCookieStore() != null) {
             cookieChangeList = headers.updateCookiesIfChanged(javaCon.getURL(), request.getBuilder().getAssignedCookieStore());
         }
-        _getBody();
+        downloadResponse();
         javaCon.disconnect();
         if (callback != null) callback.finished(this);
     }
@@ -176,17 +178,30 @@ public class Response {
         return cookieChangeList;
     }
 
+    /** Response as it was received in byte[] form **/
+    public byte[] getResponseBytes() {
+        return responseBytes;
+    }
+
+    /** Body of the response as it was received, decoded with charset indicated in header or default (utf-8) **/
+    public String getBodyAsIs(){
+        if (responseBodyAsIs == null) {
+            responseBodyAsIs = responseBytes == null || responseBytes.length == 0 ? "" : new String(responseBytes, getCharset());
+        }
+        return responseBodyAsIs;
+    }
+
     /**
      * Unescaped body of the response. Changed version, where escaping of characters was removed.
      * Usually produces more human-readable result.
      */
     public String getBodyUnescaped(){
         if (!unescaped){
-            if (responseBodyAsIs != null){
+            if (getBodyAsIs() != null){
                 try {
-                    responseUnescaped = unescape(responseBodyAsIs);
+                    responseUnescaped = unescape(getBodyAsIs());
                 } catch (Exception e) {
-                    responseUnescaped = responseBodyAsIs;
+                    responseUnescaped = getBodyAsIs();
                 }
             }
             unescaped = true;
@@ -194,50 +209,51 @@ public class Response {
         return responseUnescaped;
     }
 
-    /** Body of the response as it was received, unchanged **/
-    public String getBodyAsIs(){
-        return responseBodyAsIs;
-    }
-
-    private String _getBody() throws IOException {
-        if (responseBodyAsIs == null) {
-
-            Reader reader;
+    private void downloadResponse() {
+        if (responseBytes != null) return;
+        InputStream is;
+        try {
+            is = _getInputStream();
+        } catch (Exception e) {
+            errorStreamUsed = true;
+            bodyException = e;
             try {
-                reader = _getReader(getCharset());
-            } catch (Exception e) {
-                errorStreamUsed = true;
-                bodyException = e;
-                try {
-                    reader = _getErrorReader(getCharset());
-                } catch (Exception e1) {
-                    responseBodyAsIs = "";
-                    bodyException = e1;
-                    return responseBodyAsIs;
-                }
+                is = _getErrorInputStream();
+            } catch (Exception e1) {
+                responseBytes = new byte[0];
+                bodyException = e1;
+                return;
             }
-
-            int bufferSize;
-            if (contentLength <= 0) {
-                bufferSize = 8192;
-            } else if (contentLength < 16384) {
-                bufferSize = 4096;
-            } else if (contentLength < 131072){
-                bufferSize = 8192;
-            } else {
-                bufferSize = 16384;
-            }
-            StringBuilder sb = new StringBuilder();
-            char[] buffer = new char[bufferSize];
-            int read = reader.read(buffer);
-            while (read != -1) {
-                sb.append(buffer, 0, read);
-                read = reader.read(buffer);
-            }
-            responseBodyAsIs = sb.toString();
-            reader.close();
         }
-        return responseBodyAsIs;
+
+        int bufferSize;
+        if (contentLength <= 0) {
+            bufferSize = 8192;
+        } else if (contentLength < 16384) {
+            bufferSize = 4096;
+        } else if (contentLength < 131072){
+            bufferSize = 8192;
+        } else {
+            bufferSize = 16384;
+        }
+        ByteArray byteArray = new ByteArray(Math.max(contentLength, 512));
+        byte[] buffer = new byte[bufferSize];
+        try {
+            int read = is.read(buffer);
+            while (read != -1) {
+                byteArray.addAll(buffer, 0, read);
+                read = is.read(buffer);
+            }
+        } catch (Exception e) {
+            bodyException = e;
+        } finally {
+            responseBytes = byteArray.toArray();
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static String unescape(String input){
@@ -252,8 +268,9 @@ public class Response {
         return wrapStream(javaCon.getErrorStream());
     }
 
-    private Charset getCharset(){
-        return charset == null ? Charsets.utf_8 : charset;
+    /** Charset used to decode response **/
+    public Charset getCharset(){
+        return charset != null ? charset : Charsets.utf_8;
     }
 
     private InputStream wrapStream(InputStream is) throws IOException {
