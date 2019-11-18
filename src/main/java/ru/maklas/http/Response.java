@@ -274,6 +274,7 @@ public class Response {
     }
 
     private InputStream wrapStream(InputStream is) throws IOException {
+        if (is == null) return new ByteArrayInputStream(new byte[0]);
         Header contentEncodingHeader = getHeaders().getHeader(Header.ContentEncoding.key);
         if (contentEncodingHeader == null) return is;
         String[] encodings = StringUtils.split(contentEncodingHeader.value, ',');
