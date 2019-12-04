@@ -12,7 +12,13 @@ import java.util.Iterator;
 /** Storage for cookies. Stores cookies and manages cookie changes **/
 public class CookieStore implements Iterable<Cookie>{
 
-    public static final Predicate<Cookie> COOKIE_PREDICATE_ALLOW_ALL = (c) -> true;
+    public static final Predicate<Cookie> COOKIE_PREDICATE_ALLOW_ALL = new Predicate<Cookie>() {
+        @Override
+        public boolean evaluate(Cookie c) {
+            return true;
+        }
+    };
+
     private Array<Cookie> cookies;
     private Predicate<Cookie> cookieChangePredicate = COOKIE_PREDICATE_ALLOW_ALL;
 
@@ -139,7 +145,7 @@ public class CookieStore implements Iterable<Cookie>{
 
     public void setCookieChangePredicate(@Nullable Predicate<Cookie> cookieChangePredicate) {
         if (cookieChangePredicate == null){
-            cookieChangePredicate = (c) -> true;
+            cookieChangePredicate = COOKIE_PREDICATE_ALLOW_ALL;
         }
         this.cookieChangePredicate = cookieChangePredicate;
     }

@@ -39,7 +39,6 @@ public class Response {
     private int contentLength; //Content length from the headers. Doesn't actually represent length of the content. Might be 0
     private Charset charset;
 
-
     public Response(HttpURLConnection javaCon, URL url, int msToConnect, Request request, HttpCallback callback) throws IOException {
         this.javaCon = javaCon;
         requestUrl = url;

@@ -4,10 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import sun.net.www.MessageHeader;
 import sun.net.www.protocol.https.DelegateHttpsURLConnection;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -100,30 +97,38 @@ public class Request {
         return response;
     }
 
+    /** Sends request **/
     public Response send() throws ConnectionException {
         javaCon.setConnectTimeout(Http.defaultConnectTimeOut);
         javaCon.setReadTimeout(Http.defaultReadTimeOut);
         return _send(null);
     }
 
+    /** Sends request **/
     public Response send(HttpCallback callback) throws ConnectionException {
         javaCon.setConnectTimeout(Http.defaultConnectTimeOut);
         javaCon.setReadTimeout(Http.defaultReadTimeOut);
         return _send(callback);
     }
 
+    /**
+     * Sends request. Note that timeOut will be for both - the connection and read time, so in theory,
+     * specified time can be doubled. For much stricter timeing, use {@link #send(int, int)}
+     */
     public Response send(int timeOut) throws ConnectionException {
         javaCon.setConnectTimeout(timeOut);
         javaCon.setReadTimeout(timeOut);
         return _send(null);
     }
 
+    /** Sends request **/
     public Response send(int connectTimeOut, int readTimeOut) throws ConnectionException {
         javaCon.setConnectTimeout(connectTimeOut);
         javaCon.setReadTimeout(readTimeOut);
         return _send(null);
     }
 
+    /** Sends request **/
     public Response send(int connectTimeOut, int readTimeOut, HttpCallback callback) throws ConnectionException {
         javaCon.setConnectTimeout(connectTimeOut);
         javaCon.setReadTimeout(readTimeOut);
