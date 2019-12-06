@@ -7,108 +7,99 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 
+/** Encoder used to encode query parameters for GET in address bar and POST in request body **/
 public class UrlEncoder {
 
-    public static final MapFunction<String, String> javaUrl = UrlEncoder::encodeJavaUrl;
-    public static final MapFunction<String, String> jsUri = UrlEncoder::encodeURIComponent;
-    public static final MapFunction<String, String> jsUriAndPlus = UrlEncoder::encodeURIComponentPlus;
-    public static       MapFunction<String, String> defaultEncoding = javaUrl;
+	public static final MapFunction<String, String> javaUrl = UrlEncoder::encodeJavaUrl;
+	public static final MapFunction<String, String> jsUri = UrlEncoder::encodeURIComponent;
+	public static final MapFunction<String, String> jsUriAndPlus = UrlEncoder::encodeURIComponentPlus;
+	public static MapFunction<String, String> defaultEncoding = javaUrl;
 
-    private Array<KeyValuePair> pairs = new Array<>();
-    private MapFunction<String, String> encodingFunction = defaultEncoding;
+	private Array<KeyValuePair> pairs = new Array<>();
+	private MapFunction<String, String> encodingFunction = defaultEncoding;
 
-    public UrlEncoder add(String key, String value){
-        pairs.add(new KeyValuePair(key, value));
-        return this;
-    }
+	public UrlEncoder add(String key, Object value) {
+		pairs.add(new KeyValuePair(key, value != null ? String.valueOf(value) : ""));
+		return this;
+	}
 
-    public UrlEncoder add(String key, long value){
-        return add(key, Long.toString(value));
-    }
+	public Array<KeyValuePair> getPairs() {
+		return pairs;
+	}
 
-    public UrlEncoder add(String key, boolean value){
-        return add(key, Boolean.toString(value));
-    }
+	public UrlEncoder usingJavaEncoding() {
+		this.encodingFunction = javaUrl;
+		return this;
+	}
 
-    public UrlEncoder add(String key, Object value){
-        return add(key, String.valueOf(value));
-    }
+	public UrlEncoder usingJsEncoding() {
+		this.encodingFunction = jsUri;
+		return this;
+	}
 
-    public Array<KeyValuePair> getPairs() {
-        return pairs;
-    }
+	public UrlEncoder usingJsAndPlus() {
+		this.encodingFunction = jsUriAndPlus;
+		return this;
+	}
 
-    public UrlEncoder usingJavaEncoding(){
-        this.encodingFunction = javaUrl;
-        return this;
-    }
+	public String encode() {
+		if (pairs.size == 0) return "";
+		MapFunction<String, String> encodingFunction = this.encodingFunction;
+		StringBuilder builder = new StringBuilder();
 
-    public UrlEncoder usingJsEncoding(){
-        this.encodingFunction = jsUri;
-        return this;
-    }
+		for (KeyValuePair pair : pairs) {
+			builder.append(encodingFunction.map(pair.key))
+					.append("=")
+					.append(encodingFunction.map(pair.value))
+					.append("&");
+		}
+		builder.setLength(builder.length() - 1);
+		return builder.toString();
+	}
 
-    public UrlEncoder usingJsAndPlus(){
-        this.encodingFunction = jsUriAndPlus;
-        return this;
-    }
+	/** performs encoding in specified charset **/
+	public byte[] encode(Charset charset) {
+		return encode().getBytes(charset);
+	}
 
+	/**
+	 * Encodes as per x-www-form-urlencoded documentation {@link URLEncoder}.
+	 * Same as browser does when doing GET request
+	 */
+	public static String encodeJavaUrl(String s) {
+		try {
+			return URLEncoder.encode(s, "UTF-8");
+		} catch (UnsupportedEncodingException ignore) {
+		}
+		return s;
+	}
 
-    public String encode() {
-        if (pairs.size == 0) return "";
-        MapFunction<String, String> encodingFunction = this.encodingFunction;
-        StringBuilder builder = new StringBuilder();
+	/** equivalent to js' encodeURIComponent() **/
+	public static String encodeURIComponent(String s) {
+		try {
+			return URLEncoder.encode(s, "UTF-8")
+					.replaceAll("\\+", "%20")
+					.replaceAll("%21", "!")
+					.replaceAll("%7E", "~")
+					.replaceAll("%27", "'")
+					.replaceAll("%28", "(")
+					.replaceAll("%29", ")");
+		} catch (UnsupportedEncodingException ignore) {
+		}
+		return s;
+	}
 
-        for (KeyValuePair pair : pairs) {
-            builder.append(encodingFunction.map(pair.key))
-                    .append("=")
-                    .append(encodingFunction.map(pair.value))
-                    .append("&");
-        }
-        builder.setLength(builder.length() - 1);
-        return builder.toString();
-    }
-
-    public byte[] encode(Charset charset){
-        return encode().getBytes(charset);
-    }
-
-
-    /**
-     * Кодирует по правилам x-www-form-urlencoded документации {@link URLEncoder}.
-     * Аналагичен кодированию параметров в браузере при GET-запросе
-     */
-    public static String encodeJavaUrl(String s) {
-        try {
-            return URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException ignore) {}
-        return s;
-    }
-
-    /** Одноимённый метод в js. Кодирует прямо как там **/
-    public static String encodeURIComponent(String s){
-        try {
-            return URLEncoder.encode(s, "UTF-8")
-                    .replaceAll("\\+", "%20")
-                    .replaceAll("%21", "!")
-                    .replaceAll("%7E", "~")
-                    .replaceAll("%27", "'")
-                    .replaceAll("%28", "(")
-                    .replaceAll("%29", ")");
-        } catch (UnsupportedEncodingException ignore) {}
-        return s;
-    }
-
-    /**  Кодирует по правилам x-www-form-urlencoded документации Wikipedia **/
-    public static String encodeURIComponentPlus(String s){
-        try {
-            return URLEncoder.encode(s, "UTF-8")
-                    .replaceAll("%21", "!")
-                    .replaceAll("%7E", "~")
-                    .replaceAll("%27", "'")
-                    .replaceAll("%28", "(")
-                    .replaceAll("%29", ")");
-        } catch (UnsupportedEncodingException ignore) {}
-        return s;
-    }
+	/** Encodes using Wikipedia's documentation of x-www-form-urlencoded **/
+	public static String encodeURIComponentPlus(String s) {
+		try {
+			return URLEncoder.encode(s, "UTF-8")
+					.replaceAll("%21", "!")
+					.replaceAll("%7E", "~")
+					.replaceAll("%27", "'")
+					.replaceAll("%28", "(")
+					.replaceAll("%29", ")");
+		} catch (UnsupportedEncodingException ignore) {
+		}
+		return s;
+	}
 }

@@ -4,111 +4,126 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.Iterator;
 
-/** Header list. Used for storage and access.**/
+/** Header list. Used for storage and access. **/
 public class HeaderList implements Iterable<Header> {
 
-    Array<Header> headers = new Array<>();
+	Array<Header> headers = new Array<>();
 
-    @Override
-    public Iterator<Header> iterator() {
-        return headers.iterator();
-    }
+	@Override
+	public Iterator<Header> iterator() {
+		return headers.iterator();
+	}
 
-    /** Adds all the cookies. Duplicates are allowed **/
-    public void addAll(HeaderList headers) {
-        this.headers.addAll(headers.headers);
-    }
+	/** Adds all the cookies. Duplicates are allowed **/
+	public void addAll(HeaderList headers) {
+		this.headers.addAll(headers.headers);
+	}
 
-    /** Adds a header. Duplicates are allowed **/
-    public HeaderList add(Header header) {
-        headers.add(header);
-        return this;
-    }
+	/** Adds a header. Duplicates are allowed **/
+	public HeaderList add(Header header) {
+		headers.add(header);
+		return this;
+	}
 
-    /** Adds header. If there already was a header with the same Key, it gets replaced **/
-    public HeaderList addUnique(Header header) {
-        if (header == null || header.key == null) return this;
-        String key = header.key;
-        int targetIndex = -1;
-        for (int i = 0; i < headers.size; i++) {
-            if (key.equalsIgnoreCase(headers.get(i).key)){
-                targetIndex = i;
-                break;
-            }
-        }
-        if (targetIndex == -1){
-            headers.add(header);
-        } else {
-            headers.set(targetIndex, header);
-        }
-        return this;
-    }
+	/** Adds header. If there already was a header with the same Key, it gets replaced **/
+	public HeaderList addUnique(Header header) {
+		if (header == null || header.key == null) return this;
+		String key = header.key;
+		int targetIndex = -1;
+		for (int i = 0; i < headers.size; i++) {
+			if (key.equalsIgnoreCase(headers.get(i).key)) {
+				targetIndex = i;
+				break;
+			}
+		}
+		if (targetIndex == -1) {
+			headers.add(header);
+		} else {
+			headers.set(targetIndex, header);
+		}
+		return this;
+	}
 
-    public void remove(String key) {
-        Iterator<Header> iter = headers.iterator();
-        while (iter.hasNext()){
-            if (key.equalsIgnoreCase(iter.next().key)){
-                iter.remove();
-            }
-        }
-    }
+	public void remove(String key) {
+		Iterator<Header> iter = headers.iterator();
+		while (iter.hasNext()) {
+			if (key.equalsIgnoreCase(iter.next().key)) {
+				iter.remove();
+				return;
+			}
+		}
+	}
 
-    /** Doesn't care about upper/lower case **/
-    public Header getHeader(String key){
-        return getHeader(key, false);
-    }
+	/** Doesn't care about upper/lower case **/
+	public Header getHeader(String key) {
+		return getHeader(key, false);
+	}
 
-    public Header getHeader(String key, boolean caseSensitive){
-        for (Header header : headers) {
-            if (equals(key, header.key, caseSensitive)){
-                return header;
-            }
-        }
-        return null;
-    }
+	public Header getHeader(String key, boolean caseSensitive) {
+		for (Header header : headers) {
+			if (equals(key, header.key, caseSensitive)) {
+				return header;
+			}
+		}
+		return null;
+	}
 
-    public Array<Header> getHeaders(String key, boolean caseSensitive){
-        Array<Header> arr = new Array<>();
+	/** Doesn't care about upper/lower case **/
+	public String getHeaderValue(String key) {
+		return getHeaderValue(key, false);
+	}
 
-        for (Header header : headers) {
-            if (equals(key, header.key, caseSensitive)){
-                arr.add(header);
-            }
-        }
+	public String getHeaderValue(String key, boolean caseSensitive) {
+		for (Header header : headers) {
+			if (equals(key, header.key, caseSensitive)) {
+				return header.value;
+			}
+		}
+		return null;
+	}
 
-        return arr;
-    }
+	public Array<Header> getHeaders(String key, boolean caseSensitive) {
+		Array<Header> arr = new Array<>();
 
-    protected boolean equals(String s1, String s2, boolean caseSensitive){
-        return caseSensitive ? s1.equals(s2) : s1.equalsIgnoreCase(s2);
-    }
+		for (Header header : headers) {
+			if (equals(key, header.key, caseSensitive)) {
+				arr.add(header);
+			}
+		}
 
-    public int size(){
-        return headers.size;
-    }
+		return arr;
+	}
 
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        for (Header header : headers) {
-            builder.append(header.key)
-                    .append(": ")
-                    .append(header.value).append('\n');
-        }
-        return builder.toString();
-    }
+	protected boolean equals(String s1, String s2, boolean caseSensitive) {
+		return caseSensitive ? s1.equals(s2) : s1.equalsIgnoreCase(s2);
+	}
 
-    public HeaderList addIfNotPresent(Header header) {
-        if (header == null || header.key == null) return this;
-        String key = header.key;
-        for (int i = 0; i < headers.size; i++) {
-            if (key.equals(headers.get(i).key)){
-                return this;
-            }
-        }
-        headers.add(header);
-        return this;
-    }
+	public int size() {
+		return headers.size;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (Header header : headers) {
+			builder.append(header.key)
+					.append(": ")
+					.append(header.value).append('\n');
+		}
+		return builder.toString();
+	}
+
+	public HeaderList addIfNotPresent(Header header) {
+		if (header == null || header.key == null) return this;
+		String key = header.key;
+		for (int i = 0; i < headers.size; i++) {
+			if (key.equals(headers.get(i).key)) {
+				return this;
+			}
+		}
+		headers.add(header);
+		return this;
+	}
 }
 
 

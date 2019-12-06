@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 public class ConnectionBuilder {
@@ -20,10 +21,8 @@ public class ConnectionBuilder {
 	private HeaderList headers = new HeaderList(); //Headers that will be send
 	private Array<Cookie> cookies = new Array<>(); //Cookie store that will be used to produce Cookie header
 	private ProxyData proxy;
-	private boolean allowRedirectChanged = false;
-	private boolean followRedirect = true;
-	private boolean useCacheChanged = false;
-	private boolean useCache = false;
+	private Boolean followRedirect;
+	private Boolean useCache;
 	private byte[] output = null;
 	private boolean built = false;
 	private CookieStore assignedCookieStore; //Cookie database that will be changed according to set-cookie header
@@ -32,6 +31,7 @@ public class ConnectionBuilder {
 		this.method = method;
 	}
 
+	/** Creates copy with the same data, assigned cookies and everything **/
 	public ConnectionBuilder cpy() {
 		ConnectionBuilder cb = new ConnectionBuilder(method);
 		cpy(cb);
@@ -44,9 +44,7 @@ public class ConnectionBuilder {
 		cb.headers.addAll(headers);
 		cb.cookies.addAll(cookies);
 		cb.proxy = proxy;
-		cb.allowRedirectChanged = allowRedirectChanged;
 		cb.followRedirect = followRedirect;
-		cb.useCacheChanged = useCacheChanged;
 		cb.useCache = useCache;
 		cb.built = built;
 		if (output != null) {
@@ -84,7 +82,7 @@ public class ConnectionBuilder {
 
 	/** new ConnectionBuilder starting with get method request **/
 	public static ConnectionBuilder get(String base, @Nullable String path, @Nullable UrlEncoder query) {
-		return get(combineUrl(base, path)).write(query == null ? null : query.encode().getBytes(Charsets.utf_8));
+		return get(combineUrl(base, path)).write(query == null ? null : query.encode(HttpUtils.utf_8));
 	}
 
 	/** new ConnectionBuilder starting with pot method request **/
@@ -109,9 +107,21 @@ public class ConnectionBuilder {
 		return this;
 	}
 
+	/** Specify connection address. **/
+	public ConnectionBuilder url(String base, String path, @Nullable UrlEncoder query) {
+		url(combineUrl(base, path));
+		if (query != null) write(query.encode().getBytes(HttpUtils.utf_8));
+		return this;
+	}
+
+	/** Specify connection address. **/
+	public ConnectionBuilder url(String base, String path) {
+		return url(combineUrl(base, path));
+	}
+
 	/**
 	 * Add a header to request
-	 * @see Header
+		 * @see Header
 	 */
 	public ConnectionBuilder header(Header header) {
 		this.headers.addUnique(header);
@@ -120,7 +130,7 @@ public class ConnectionBuilder {
 
 	/**
 	 * Add a header to request
-	 * @see Header
+		 * @see Header
 	 */
 	public ConnectionBuilder h(Header header) {
 		return this.header(header);
@@ -128,7 +138,7 @@ public class ConnectionBuilder {
 
 	/**
 	 * Add a header to request
-	 * @see Header
+		 * @see Header
 	 */
 	public ConnectionBuilder header(String key, String value) {
 		this.headers.addUnique(new Header(key, value));
@@ -137,7 +147,7 @@ public class ConnectionBuilder {
 
 	/**
 	 * Add a header to request
-	 * @see Header
+		 * @see Header
 	 */
 	public ConnectionBuilder h(String key, String value) {
 		return header(key, value);
@@ -145,7 +155,7 @@ public class ConnectionBuilder {
 
 	/**
 	 * Adds headers to request
-	 * @see Header
+		 * @see Header
 	 */
 	public ConnectionBuilder headers(Array<Header> headers) {
 		for (Header header : headers) {
@@ -156,7 +166,7 @@ public class ConnectionBuilder {
 
 	/**
 	 * Adds headers to request
-	 * @see Header
+		 * @see Header
 	 */
 	public ConnectionBuilder headers(Header... headers) {
 		for (Header header : headers) {
@@ -247,16 +257,37 @@ public class ConnectionBuilder {
 
 	/** Whether or not to allow redirect **/
 	public ConnectionBuilder allowRedirect(boolean allow) {
-		this.allowRedirectChanged = true;
 		this.followRedirect = allow;
 		return this;
 	}
 
 	/** @see URLConnection#setUseCaches(boolean) **/
 	public ConnectionBuilder cache(boolean enabled) {
-		this.useCacheChanged = true;
 		this.useCache = enabled;
 		return this;
+	}
+
+	/** Appends Content-Type header and writes data to the output **/
+	public ConnectionBuilder write(Header.ContentType contentType, String data) {
+		headers.addUnique(contentType);
+		return write(data);
+	}
+
+	/** writes data to the output **/
+	public ConnectionBuilder write(Header.ContentType contentType, byte[] data) {
+		headers.addUnique(contentType);
+		return write(data);
+	}
+
+	/** Appends Content-Type header and writes data to the output using UTF-8 encoding **/
+	public ConnectionBuilder write(String data, String mimeType, Charset encoding) {
+		headers.addUnique(Header.ContentType.with(mimeType, encoding));
+		return write(data.getBytes(encoding));
+	}
+
+	/** Writes data to the output using UTF-8 encoding **/
+	public ConnectionBuilder write(@NotNull String data) {
+		return write(data.getBytes(HttpUtils.utf_8));
 	}
 
 	/**
@@ -276,38 +307,29 @@ public class ConnectionBuilder {
 		return write(Header.ContentType.form_urlencoded, encoder.encode());
 	}
 
-	/** Specifies Content-Type asapplication/json and writes jsonString to the output **/
+	/** Specifies Content-Type as 'application/javascript; charset=UTF-8' and writes jsonString to the output **/
 	public ConnectionBuilder writeJson(String jsonString) {
 		return write(Header.ContentType.appJson, jsonString);
 	}
 
-	/** Specifies Content-Type as application/xml and writes xml to the output **/
+	/** Specifies Content-Type as 'application/xml; charset=UTF-8' and writes xml to the output **/
 	public ConnectionBuilder writeXml(String jsonString) {
 		return write(Header.ContentType.appXml, jsonString);
 	}
 
-	/** Appends Content-Type header and writes data to the output **/
-	public ConnectionBuilder write(Header.ContentType contentType, String data) {
-		headers.addUnique(contentType);
-		return write(data);
+	/** Specifies Content-Type as 'text/plain; charset=UTF-8' and writes xml to the output **/
+	public ConnectionBuilder writePlainText(String text) {
+		return write(Header.ContentType.textPlain, text);
 	}
 
-	/** Appends Content-Type header and writes data to the output **/
-	public ConnectionBuilder write(String contentType, String data) {
-		headers.addUnique(Header.ContentType.with(contentType));
-		return write(data);
+	/** Specifies Content-Type as 'text/plain; charset=UTF-8' and writes xml to the output **/
+	public ConnectionBuilder writeHtml(String html) {
+		return write(Header.ContentType.textHtml, html);
 	}
 
-	/** writes data to the output **/
-	public ConnectionBuilder write(@NotNull String data) {
-		return write(data.getBytes(Charsets.utf_8));
-	}
-
-
-	/** writes data to the output **/
-	public ConnectionBuilder write(String contentType, byte[] data) {
-		headers.addUnique(Header.ContentType.with(contentType));
-		return write(data);
+	/** Specifies Content-Type as 'application/octet-stream' and writes xml to the output **/
+	public ConnectionBuilder writeBinary(byte[] data) {
+		return write(Header.ContentType.octetStream, data);
 	}
 
 	/**
@@ -363,8 +385,8 @@ public class ConnectionBuilder {
 		} catch (ProtocolException e) {
 			throw new ConnectionException(ConnectionException.Type.BAD_PROTOCOL, e, this, null);
 		}
-		if (allowRedirectChanged) javaCon.setInstanceFollowRedirects(followRedirect);
-		if (useCacheChanged) javaCon.setUseCaches(useCache);
+		if (followRedirect != null) javaCon.setInstanceFollowRedirects(followRedirect);
+		if (useCache != null) javaCon.setUseCaches(useCache);
 
 		preprocessHeaders(url);
 		for (Header header : headers) {
@@ -377,37 +399,9 @@ public class ConnectionBuilder {
 		return new Request(javaCon, url, method, output, headers, this);
 	}
 
-	private Header buildCookieHeader(URL url) {
-		if (cookies.size == 0) return null;
-		StringBuilder builder = new StringBuilder();
-		for (Cookie cookie : cookies) {
-			if (StringUtils.isEmpty(cookie.getDomain()) || cookie.appliesToDomain(url.getHost())) {
-				builder
-						.append(cookie.getKey())
-						.append("=")
-						.append(cookie.getValue())
-						.append("; ");
-			}
-		}
-
-		if (builder.length() <= 2) return null;
-		builder.setLength(builder.length() - 2);
-		return new Header(Cookie.headerKey, builder.toString());
-	}
-
-	private void preprocessHeaders(URL url) {
-		if (Http.autoAddHostHeader) { //Adds Host header if not present
-			headers.addIfNotPresent(Header.Host.fromUrl(url));
-		}
-		if (Http.GET.equalsIgnoreCase(method)) { //If it's a GET method, the Content type is not needed.
-			headers.remove(Header.ContentType.key);
-		}
-	}
-
-	public Response send() throws ConnectionException {
+	public FullResponse send() throws ConnectionException {
 		Request request = build();
-		Response response = request.send();
-		return response;
+		return request.send();
 	}
 
 	//************//
@@ -471,12 +465,31 @@ public class ConnectionBuilder {
 		return sb.toString();
 	}
 
-	private static String combineUrl(String baseUrl, String path, String query) {
-		String url = combineUrl(baseUrl, path);
-		if (StringUtils.isEmpty(query)) return url;
-		url = url.endsWith("?") ? url.substring(0, url.length() - 1) : url;
-		query = query.startsWith("?") ? query : "?" + query;
-		return url + query;
+	private void preprocessHeaders(URL url) {
+		if (Http.autoAddHostHeader) {
+			headers.addIfNotPresent(Header.Host.fromUrl(url));
+		}
+		if (Http.GET.equalsIgnoreCase(method)) {
+			headers.remove(Header.ContentType.key);
+		}
+	}
+
+	private Header buildCookieHeader(URL url) {
+		if (cookies.size == 0) return null;
+		StringBuilder builder = new StringBuilder();
+		for (Cookie cookie : cookies) {
+			if (StringUtils.isEmpty(cookie.getDomain()) || cookie.appliesToDomain(url.getHost())) {
+				builder
+						.append(cookie.getKey())
+						.append("=")
+						.append(cookie.getValue())
+						.append("; ");
+			}
+		}
+
+		if (builder.length() <= 2) return null;
+		builder.setLength(builder.length() - 2);
+		return new Header(Cookie.headerKey, builder.toString());
 	}
 
 	private HttpURLConnection openConnection(URL url) throws IOException {
@@ -484,10 +497,8 @@ public class ConnectionBuilder {
 		if (proxy == null) {
 			con = (HttpURLConnection) url.openConnection();
 		} else {
-			Proxy p = new Proxy(proxy.getType(), new InetSocketAddress(proxy.getAddress(), proxy.getPort()));
-			con = (HttpURLConnection) url.openConnection(p);
+			con = (HttpURLConnection) url.openConnection(proxy.getJavaProxy());
 		}
-
 		return con;
 	}
 
