@@ -7,6 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 /** Storage for cookies. Stores cookies and manages cookie changes **/
@@ -84,7 +87,11 @@ public class CookieStore implements Iterable<Cookie> {
 	}
 
 	public void addAll(CookieStore cookies) {
-		for (Cookie cookie : cookies.cookies) {
+		addAll(cookies.cookies);
+	}
+
+	public void addAll(Array<Cookie> cookies) {
+		for (Cookie cookie : cookies) {
 			if (!cookie.isDeleted()) {
 				this.cookies.add(new Cookie(cookie));
 			}
@@ -181,21 +188,34 @@ public class CookieStore implements Iterable<Cookie> {
 		return getCookie(key) != null;
 	}
 
-	public static CookieStore parse(String cookieContainingString) {
+	public static CookieStore parse(String cookies) {
+		return parse(cookies, true);
+	}
+
+	public static CookieStore parse(String cookies, boolean decode) {
 		CookieStore store = new CookieStore();
-		if (StringUtils.isEmpty(cookieContainingString)) {
+		if (StringUtils.isEmpty(cookies)) {
 			return store;
 		}
 
-		String[] split = cookieContainingString.split(";");
+		String[] split = cookies.split(";");
 		for (String s : split) {
 			String[] keyValue = s.split("=");
 			if (keyValue.length == 2) {
-				store.setCookie(new Cookie(StringUtils.trimToEmpty(keyValue[0]), StringUtils.trimToEmpty(keyValue[1])));
+				String key = decode ? trimDecode(keyValue[0]) : StringUtils.trimToEmpty(keyValue[0]);
+				String value = decode ? trimDecode(keyValue[1]) : StringUtils.trimToEmpty(keyValue[1]);
+				store.setCookie(new Cookie(key, value));
 			}
 		}
 
 		return store;
+	}
+	private static String trimDecode(@NotNull String text) {
+		text = StringUtils.trimToEmpty(text);
+		try {
+			return URLDecoder.decode(text, StandardCharsets.UTF_8.name());
+		} catch (UnsupportedEncodingException ignored) { }
+		return text;
 	}
 
 }

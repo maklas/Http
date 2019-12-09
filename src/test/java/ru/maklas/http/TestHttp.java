@@ -226,7 +226,11 @@ public class TestHttp {
 	}
 
 	@Test
-	public void name() {
-		System.out.println("Post Data. \\u0410\\u0411\\u0412\\u0413\\u0414");
+	public void testCookieStoreParse() {
+		CookieStore cs = CookieStore.parse(" key = value; OtherKey = ;json=%7B%22data%22%3A%5B100%2C%20%22abc%22%2C%20false%5D%2C%20%22key%22%3A%22Value%22%7D");
+		assertEquals(2, cs.size());
+		assertEquals("value", cs.getCookie("key"));
+		assertNull(cs.getCookie("OtherKey"));
+		assertEquals("{\"data\":[100, \"abc\", false], \"key\":\"Value\"}", cs.getCookie("json"));
 	}
 }
