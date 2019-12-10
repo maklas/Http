@@ -250,6 +250,15 @@ public class Header extends KeyValuePair {
 		}
 	}
 
+	public static class ContentLength {
+		public static final String key = "Content-Length";
+
+		public static Header with(long len) {
+			return new Header(key, String.valueOf(len));
+		}
+
+	}
+
 	/** Response header. Sets cookie for the client **/
 	public static class SetCookie {
 		public static final String key = "Set-Cookie";

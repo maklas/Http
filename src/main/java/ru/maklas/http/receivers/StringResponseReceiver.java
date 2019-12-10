@@ -1,7 +1,10 @@
 package ru.maklas.http.receivers;
 
 import org.jetbrains.annotations.NotNull;
-import ru.maklas.http.*;
+import ru.maklas.http.HttpUtils;
+import ru.maklas.http.Response;
+import ru.maklas.http.ResponseReceiver;
+import ru.maklas.http.Unescaper;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

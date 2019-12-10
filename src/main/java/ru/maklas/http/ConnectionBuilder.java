@@ -65,6 +65,11 @@ public class ConnectionBuilder {
 	}
 
 	/** new ConnectionBuilder starting with get method request **/
+	public static ConnectionBuilder get(URL url) {
+		return new ConnectionBuilder(Http.GET).url(url);
+	}
+
+	/** new ConnectionBuilder starting with get method request **/
 	public static ConnectionBuilder get(String url) {
 		return new ConnectionBuilder(Http.GET).url(url);
 	}

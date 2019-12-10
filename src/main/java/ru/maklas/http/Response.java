@@ -237,9 +237,8 @@ public abstract class Response {
 			String responseMessage = getResponseMessage();
 
 			w.println("------- REQUEST -------");
-			w.println("Date: " + (request.timeRequested == 0 ? "-" : new Date().toString()));
-			w.println("URL: " + requestUrl);
-			w.println("Method: " + getRequest().getBuilder().getMethod());
+			w.println("Date: " + (request.timeRequested == 0 ? "-" : new Date(request.timeRequested).toString()));
+			w.print(getRequest().getBuilder().getMethod()); w.print(" "); w.print(requestUrl.toExternalForm()); w.println(" HTTP/1.1");
 			ProxyData proxy = getRequest().getBuilder().getProxy();
 			if (proxy != null) w.println("Proxy: " + proxy);
 			for (Header requestHeader : requestHeaders) {
