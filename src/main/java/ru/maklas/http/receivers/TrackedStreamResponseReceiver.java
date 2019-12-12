@@ -15,6 +15,7 @@ public class TrackedStreamResponseReceiver implements ResponseReceiver {
 	public static final int MAX = 10000;
 
 	private final OutputStream os;
+	private volatile boolean started = false;
 	private volatile boolean finished = false;
 	private volatile long cl;
 	private final AtomicLong progress = new AtomicLong();
@@ -25,6 +26,7 @@ public class TrackedStreamResponseReceiver implements ResponseReceiver {
 
 	@Override
 	public void receive(Response response, long contentLength, InputStream is, boolean isError) throws Exception {
+		started = true;
 		int bufferSize = HttpUtils.bufferSize(contentLength);
 		OutputStream os = this.os;
 		if (contentLength <= 0) {
@@ -57,7 +59,13 @@ public class TrackedStreamResponseReceiver implements ResponseReceiver {
 		return progress < cl ? (int) ((((double) progress) / cl) * MAX) : MAX;
 	}
 
+	/** Returns true after download is finished **/
 	public boolean finished() {
 		return finished;
+	}
+
+	/** Whether or not download started **/
+	public boolean started() {
+		return started;
 	}
 }
