@@ -39,17 +39,18 @@ public class Header extends KeyValuePair {
 
 
 
-	/** Request header. Specifies browser version of the client **/
+	/** Request header. Specifies browser version of the client and machine it runs on **/
 	public static class UserAgent {
+
 		public static final String key = "User-Agent";
 
-		public static final Header chrome_07_2018 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
-		public static final Header chrome_08_2018 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36");
-		public static final Header chrome_12_2018 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
-		public static final Header chrome_04_2019 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
-		public static final Header chrome_07_2019 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36");
-		public static final Header chrome_12_2019 = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
-		public static Header mostRecent = chrome_07_2019;
+		public static final Header windows_10_chrome = new Header(key, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
+		public static final Header linux_mozila = new Header(key, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1");
+		public static final Header samsung_galaxy_s9 = new Header(key, "Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36");
+		public static final Header samsung_galaxy_tab_s3 = new Header(key, "Mozilla/5.0 (Linux; Android 7.0; SM-T827R4 Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.116 Safari/537.36");
+		public static final Header mac_osx_safari = new Header(key, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9");
+		public static final Header iphone_x_safari = new Header(key, "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+		public static Header def = windows_10_chrome;
 
 		public static Header with(String val) {
 			return new Header(key, val);

@@ -2,16 +2,20 @@ package ru.maklas.http;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import ru.maklas.http.receivers.FileResponseReceiver;
 import ru.maklas.http.receivers.StreamResponseReceiver;
 import ru.maklas.http.receivers.StringResponseReceiver;
+import ru.maklas.http.receivers.TrackedStreamResponseReceiver;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URL;
 
 import static org.junit.Assert.*;
@@ -26,14 +30,14 @@ public class TestHttp {
 		Http.setAutoAddHostHeader(true);
 		Http.setDefaultKeepAlive(true);
 		Http.fetchJavaHeaders(true);
-		Http.setSystemUserAgent(Header.UserAgent.mostRecent.value);
+		Http.setSystemUserAgent(Header.UserAgent.def.value);
 	}
 
 	@Test
 	public void testGet() throws Exception {
 		Request request = ConnectionBuilder
 				.get("http://info.cern.ch/hypertext/WWW/TheProject.html")
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.h(Header.DateHeader.now())
 				.h(Header.CacheControl.noCache)
 				.build();
@@ -72,7 +76,7 @@ public class TestHttp {
 	public void testHead() throws Exception {
 		Request request = new ConnectionBuilder(Http.HEAD)
 				.url("http://info.cern.ch/hypertext/WWW/TheProject.html")
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.h(Header.DateHeader.now())
 				.h(Header.CacheControl.noCache)
 				.build();
@@ -88,7 +92,7 @@ public class TestHttp {
 	public void testEncodings() throws Exception {
 		FullResponse response = ConnectionBuilder
 				.get("https://google.com")
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.h(Header.AcceptEncoding.gzip)
 				.h(Header.DateHeader.now())
 				.h(Header.CacheControl.noCache)
@@ -100,7 +104,7 @@ public class TestHttp {
 
 		response = ConnectionBuilder
 				.get("http://httpbin.org/deflate")
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.h(Header.AcceptEncoding.deflate)
 				.h(Header.DateHeader.now())
 				.h(Header.CacheControl.noCache)
@@ -113,7 +117,7 @@ public class TestHttp {
 
 		response = ConnectionBuilder
 				.get("http://httpbin.org")
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.h(Header.AcceptEncoding.identity)
 				.h(Header.DateHeader.now())
 				.h(Header.CacheControl.noCache)
@@ -126,7 +130,7 @@ public class TestHttp {
 
 		response = ConnectionBuilder
 				.get("http://httpbin.org/brotli")
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.h(Header.AcceptEncoding.br)
 				.h(Header.DateHeader.now())
 				.h(Header.CacheControl.noCache)
@@ -173,7 +177,7 @@ public class TestHttp {
 		Request request = ConnectionBuilder
 				.get("http://httpbin.org/image/jpeg")
 				.h(Header.AcceptEncoding.gzipDeflateBr)
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.build();
 
 		File tempFile = null;
@@ -197,7 +201,7 @@ public class TestHttp {
 		Request request = ConnectionBuilder
 				.post("http://httpbin.org/post")
 				.h(Header.AcceptEncoding.gzipDeflateBr)
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.writePlainText(data)
 				.build();
 
@@ -210,12 +214,50 @@ public class TestHttp {
 	}
 
 	@Test
+	public void testTrackedStreamReceiver() throws Exception {
+		Request request = ConnectionBuilder
+				.get("https://ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.js")
+				.h(Header.AcceptEncoding.gzipDeflateBr)
+				.h(Header.UserAgent.def)
+				.build();
+
+		OutputStream os = new OutputStream() {
+			@Override
+			public void write(@NotNull byte[] b) throws IOException { }
+
+			@Override
+			public void write(@NotNull byte[] b, int off, int len) throws IOException { }
+
+			@Override
+			public void write(int b) throws IOException { }
+		};
+
+		Response response = request.send(new TrackedStreamResponseReceiver(os, 0.01, new TrackedStreamResponseReceiver.Listener() {
+			@Override
+			public void started(Response response, long contentLength, boolean isError) {
+				System.out.println("Started " + System.currentTimeMillis());
+			}
+
+			@Override
+			public void update(long progress, long contentLength) {
+				System.out.println("Progress: " + (((progress * 1.0) / contentLength) * 100) + "% " + System.currentTimeMillis());
+			}
+
+			@Override
+			public void finished() {
+				System.out.println("Finished " + System.currentTimeMillis());
+			}
+		}));
+		System.out.println(response);
+	}
+
+	@Test
 	public void testStringReceiver() throws Exception {
 		String data = "My String data. Моя строчка";
 		Request request = ConnectionBuilder
 				.post("http://httpbin.org/post")
 				.h(Header.AcceptEncoding.gzipDeflateBr)
-				.h(Header.UserAgent.mostRecent)
+				.h(Header.UserAgent.def)
 				.writePlainText(data)
 				.build();
 

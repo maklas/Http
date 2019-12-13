@@ -11,6 +11,6 @@ public interface ResponseReceiver {
 	 *                      No need to decode gzip or delfate as it's already done if header present. No need to close the stream
 	 * @param isError       Whether InputStream is error stream or not.
 	 */
-	void receive(Response response, long contentLength, InputStream is, boolean isError) throws Exception;
+	void receive(Response response, long contentLength, InputStream is, Counter counter, boolean isError) throws Exception;
 
 }

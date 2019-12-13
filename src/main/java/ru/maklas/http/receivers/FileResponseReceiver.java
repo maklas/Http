@@ -1,6 +1,7 @@
 package ru.maklas.http.receivers;
 
 import org.jetbrains.annotations.NotNull;
+import ru.maklas.http.Counter;
 import ru.maklas.http.HttpUtils;
 import ru.maklas.http.Response;
 import ru.maklas.http.ResponseReceiver;
@@ -20,7 +21,7 @@ public class FileResponseReceiver implements ResponseReceiver {
 	}
 
 	@Override
-	public void receive(Response response, long contentLength, InputStream is, boolean isError) throws Exception {
+	public void receive(Response response, long contentLength, InputStream is, Counter counter, boolean isError) throws Exception {
 		if (!file.exists()) {
 			File folder = file.getParentFile();
 			if (folder == null) {
@@ -33,6 +34,7 @@ public class FileResponseReceiver implements ResponseReceiver {
 		}
 		try (FileOutputStream fos = new FileOutputStream(file)) {
 			HttpUtils.copy(is, fos, new byte[HttpUtils.bufferSize(contentLength)]);
+			fos.flush();
 		}
 	}
 }

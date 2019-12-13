@@ -1,10 +1,7 @@
 package ru.maklas.http.receivers;
 
 import org.jetbrains.annotations.NotNull;
-import ru.maklas.http.HttpUtils;
-import ru.maklas.http.Response;
-import ru.maklas.http.ResponseReceiver;
-import ru.maklas.http.Unescaper;
+import ru.maklas.http.*;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,7 +28,7 @@ public class StringResponseReceiver implements ResponseReceiver {
 	}
 
 	@Override
-	public void receive(Response response, long contentLength, InputStream is, boolean isError) throws Exception {
+	public void receive(Response response, long contentLength, InputStream is, Counter counter, boolean isError) throws Exception {
 		InputStreamReader isr = new InputStreamReader(is, charset != null ? charset : response.getCharset());
 		int bufferSize = HttpUtils.bufferSize(contentLength);
 		char[] buffer = new char[bufferSize];

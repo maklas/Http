@@ -2,6 +2,7 @@ package ru.maklas.http;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -48,20 +49,30 @@ public class ConsumedResponse extends Response {
 
 	private void receive(ResponseReceiver receiver) {
 		InputStream is;
+		CountingInputStream counter;
 		try {
-			is = _getInputStream();
+			is = getJavaCon().getInputStream();
+			if (is == null) {
+				is = new ByteArrayInputStream(new byte[0]);
+				counter = new CountingInputStream(is);
+			} else {
+				counter = new CountingInputStream(is);
+				is = wrapStream(counter);
+			}
 		} catch (Exception e) {
 			errorStreamUsed = true;
 			bodyException = e;
 			try {
-				is = _getErrorInputStream();
+				is = getJavaCon().getErrorStream();
+				counter = new CountingInputStream(is);
+				is = wrapStream(counter);
 			} catch (Exception e1) {
 				bodyException = e1;
 				return;
 			}
 		}
 		try {
-			receiver.receive(this, contentLength, is, errorStreamUsed);
+			receiver.receive(this, contentLength, is, counter, errorStreamUsed);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -77,7 +88,5 @@ public class ConsumedResponse extends Response {
 	}
 
 	@Override
-	protected void printBodyTrace(PrintWriter writer) {
-		writer.println("*Parsed by hand*");
-	}
+	protected void printBodyTrace(PrintWriter writer) { }
 }

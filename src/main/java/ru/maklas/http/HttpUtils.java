@@ -17,7 +17,7 @@ public class HttpUtils {
 
 	public static int bufferSize(long contentLength) {
 		int bufferSize;
-		if (contentLength <= 0) {
+		if (contentLength <= 0) { //Unknown
 			bufferSize = 8192;
 		} else if (contentLength < 16384) {
 			bufferSize = 4096;

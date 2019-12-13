@@ -96,10 +96,6 @@ public class Http {
 		Http.generateCookieChanges = generateCookieChanges;
 	}
 
-	public static void setMostCurrentUserAgent(String userAgent) {
-		Header.UserAgent.mostRecent = new Header(Header.UserAgent.key, userAgent);
-	}
-
 	/** Replaces default Java's user agent **/
 	public static void setSystemUserAgent(String userAgent) {
 		setProperty("http.agent", userAgent);

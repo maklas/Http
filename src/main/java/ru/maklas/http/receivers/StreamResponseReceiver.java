@@ -1,6 +1,7 @@
 package ru.maklas.http.receivers;
 
 import org.jetbrains.annotations.NotNull;
+import ru.maklas.http.Counter;
 import ru.maklas.http.HttpUtils;
 import ru.maklas.http.Response;
 import ru.maklas.http.ResponseReceiver;
@@ -18,8 +19,9 @@ public class StreamResponseReceiver implements ResponseReceiver {
 	}
 
 	@Override
-	public void receive(Response response, long contentLength, InputStream is, boolean isError) throws Exception {
+	public void receive(Response response, long contentLength, InputStream is, Counter counter, boolean isError) throws Exception {
 		HttpUtils.copy(is, os, new byte[HttpUtils.bufferSize(contentLength)]);
+		os.flush();
 	}
 
 

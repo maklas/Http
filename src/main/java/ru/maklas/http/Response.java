@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 /** Response for {@link Request} **/
@@ -179,7 +178,7 @@ public abstract class Response {
 		return wrapStream(javaCon.getErrorStream());
 	}
 
-	private InputStream wrapStream(InputStream is) throws IOException {
+	InputStream wrapStream(InputStream is) throws IOException {
 		if (is == null) return new ByteArrayInputStream(new byte[0]);
 		Header contentEncodingHeader = getHeaders().getHeader(Header.ContentEncoding.key);
 		if (contentEncodingHeader == null) return is;
@@ -188,7 +187,7 @@ public abstract class Response {
 			if (StringUtils.containsIgnoreCase(encoding, "gzip")) {
 				is = new GZIPInputStream(is);
 			} else if (StringUtils.containsIgnoreCase(encoding, "deflate")) {
-				is = new InflaterInputStream(is, new Inflater());
+				is = new InflaterInputStream(is);
 			} else if (StringUtils.containsIgnoreCase(encoding, "br")) {
 				is = new BrotliInputStream(is);
 			} else if (!StringUtils.containsIgnoreCase(encoding, "identity")) {
