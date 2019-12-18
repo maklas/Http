@@ -18,8 +18,8 @@ public static void main(String[] args){
             .assignCookieStore(cookieStore)
             .build(); //build request
     
-    Response response = request.send(); //send request
-    System.out.println(response.getTrace()); //print all information
+    FullResponse response = request.send(); //send request. There are multiple choices for send()
+    System.out.println(response); //print all information
 }
 
 
@@ -32,13 +32,11 @@ public static void setup(){
 
 ## Do not use if
 1. You need to support java 9 or above. Library relies on `HttpUrlConnection` to work (is deprecated since java 9)
-2. You have a need to download binary data. This library can only receive string data (html, xml, json, plain text, etc.)
-3. You have a need to download data straight into files. No `OutputStream` is available, all Strings are loaded directly to ram
 
 ## You can use it if
-1. You need a library for making API request with string data as a response
+1. You need a library for making API request with string/byte/stream data as a response
 2. You need browser-like behaviour for simulating user activity
-3. You want to make a bot that allows managing multiple accounts at the same time. (Multiple cookie storages)
+3. You want to make a bot that allows managing multiple accounts at the same time. (Complete control over cookies)
 
 ## Features
 1. Http version 1.1
@@ -47,6 +45,6 @@ public static void setup(){
 4. Manages cookies (storing, creation and deletion).
 5. Having multiple CookieStores allows for simulation of multiple users. Say for a multi-account bot.
 6. No need to worry about url encoding and Content-Type
-7. Supports gzip and deflate Content-Encoding
+7. Supports gzip, deflate nad br Content-Encoding by default
 8. Much easier to control request timeout.
 9. Add it to your project with [Jitpack](https://jitpack.io/#maklas/Http)!
