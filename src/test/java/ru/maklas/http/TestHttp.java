@@ -12,10 +12,7 @@ import ru.maklas.http.receivers.TrackedStreamResponseReceiver;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 
 import static org.junit.Assert.*;
@@ -274,5 +271,23 @@ public class TestHttp {
 		assertEquals("value", cs.getCookie("key"));
 		assertNull(cs.getCookie("OtherKey"));
 		assertEquals("{\"data\":[100, \"abc\", false], \"key\":\"Value\"}", cs.getCookie("json"));
+	}
+
+	@Test
+	public void testFileUpload() throws Exception {
+		File uploadFile = new File(".\\src\\test\\resources\\uploadTestFile.png");
+		System.out.println(uploadFile.getAbsolutePath());
+		try (FileInputStream fis = new FileInputStream(uploadFile)) {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			HttpUtils.copy(fis, bos, new byte[1024 * 8]);
+
+			FullResponse response = ConnectionBuilder
+					.post("http://www.csm-testcenter.org/test")
+					.h(Header.AcceptEncoding.gzipDeflateBr)
+					.write(Header.ContentType.formData, bos.toByteArray())
+					.send();
+
+			System.out.println(response);
+		}
 	}
 }

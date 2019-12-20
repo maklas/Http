@@ -234,11 +234,11 @@ public class Header extends KeyValuePair {
 			super(key, value);
 		}
 
-		public static Header with(String val) {
-			return new Header(key, val);
+		public static ContentType with(String val) {
+			return new ContentType(val);
 		}
 
-		public static Header with(String mimeType, @Nullable String encoding) {
+		public static ContentType with(String mimeType, @Nullable String encoding) {
 			StringBuilder sb = new StringBuilder(mimeType);
 			if (encoding != null) {
 				sb.append("; charset=").append(encoding);
@@ -246,8 +246,19 @@ public class Header extends KeyValuePair {
 			return with(sb.toString());
 		}
 
-		public static Header with(String mimeType, @Nullable Charset encoding) {
+		public static ContentType with(String mimeType, @Nullable Charset encoding) {
 			return with(mimeType, encoding == null ? null : encoding.displayName(Locale.US));
+		}
+
+		public static ContentType multipartFormData(@Nullable Charset charset, @Nullable String boundary) {
+			StringBuilder sb = new StringBuilder("multipart/form-data");
+			if (charset != null) {
+				sb.append("; charset=").append(charset.displayName(Locale.US));
+			}
+			if (boundary != null) {
+				sb.append("; boundary=").append(boundary);
+			}
+			return new ContentType(sb.toString());
 		}
 	}
 
