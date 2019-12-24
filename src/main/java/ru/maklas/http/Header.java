@@ -227,7 +227,6 @@ public class Header extends KeyValuePair {
 		public static final ContentType appJson = new ContentType("application/json; charset=UTF-8");
 		public static final ContentType appJS = new ContentType("application/javascript; charset=UTF-8");
 		public static final ContentType form_urlencoded = new ContentType("application/x-www-form-urlencoded; charset=UTF-8");
-		public static final ContentType formData = new ContentType("multipart/form-data; charset=UTF-8");
 		public static final ContentType octetStream = new ContentType("application/octet-stream");
 
 		ContentType(String value) {
@@ -262,13 +261,45 @@ public class Header extends KeyValuePair {
 		}
 	}
 
+	/** Length of sent data **/
 	public static class ContentLength {
 		public static final String key = "Content-Length";
 
 		public static Header with(long len) {
 			return new Header(key, String.valueOf(len));
 		}
+	}
 
+	public static class ContentDisposition {
+		public static final String key = "Content-Disposition";
+		public static final String type_inline = "inline";
+		public static final String type_attachment = "attachment";
+		public static final String type_form_data = "form-data";
+
+		public static Header with(String val) {
+			return new Header(key, val);
+		}
+
+		public static Header with(String type, String filename) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(type);
+			if (filename != null) {
+				sb.append("; ").append(HttpUtils.escapeFormData(filename));
+			}
+			return with(sb.toString());
+		}
+
+		public static Header formData(@Nullable String name, @Nullable String filename) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(type_form_data);
+			if (name != null) {
+				sb.append("; ").append(name);
+			}
+			if (filename != null) {
+				sb.append("; ").append(HttpUtils.escapeFormData(filename));
+			}
+			return with(sb.toString());
+		}
 	}
 
 	/** Response header. Sets cookie for the client **/

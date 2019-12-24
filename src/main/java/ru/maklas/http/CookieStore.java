@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 /** Storage for cookies. Stores cookies and manages cookie changes **/
@@ -213,7 +212,7 @@ public class CookieStore implements Iterable<Cookie> {
 	private static String trimDecode(@NotNull String text) {
 		text = StringUtils.trimToEmpty(text);
 		try {
-			return URLDecoder.decode(text, StandardCharsets.UTF_8.name());
+			return URLDecoder.decode(text, HttpUtils.utf_8.name());
 		} catch (UnsupportedEncodingException ignored) { }
 		return text;
 	}

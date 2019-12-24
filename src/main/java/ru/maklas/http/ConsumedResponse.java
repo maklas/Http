@@ -1,6 +1,7 @@
 package ru.maklas.http;
 
 import org.jetbrains.annotations.NotNull;
+import ru.maklas.http.receivers.FileResponseReceiver;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,6 +17,7 @@ public class ConsumedResponse extends Response {
 	private Exception bodyException;
 	private ResponseReceiver receiver;
 	private boolean finished = false;
+	private boolean hasBody;
 
 	public ConsumedResponse(HttpURLConnection javaCon, URL url, int msToConnect, Request request, @NotNull ResponseReceiver receiver) {
 		super(javaCon, url, msToConnect, request);
@@ -72,6 +74,7 @@ public class ConsumedResponse extends Response {
 			}
 		}
 		try {
+			hasBody = true;
 			receiver.receive(this, contentLength, is, counter, errorStreamUsed);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -84,9 +87,22 @@ public class ConsumedResponse extends Response {
 
 	@Override
 	protected boolean hasBody() {
-		return false;
+		return hasBody;
 	}
 
 	@Override
-	protected void printBodyTrace(PrintWriter writer) { }
+	protected void printBodyTrace(PrintWriter writer) {
+		writer.print("***Consumed by ");
+		if (receiver == null) {
+			writer.print(ResponseReceiver.class.getSimpleName());
+		} else if (receiver instanceof FileResponseReceiver) {
+			writer.print(FileResponseReceiver.class.getSimpleName());
+			writer.print("(");
+			writer.print(((FileResponseReceiver) receiver).file.getAbsolutePath());
+			writer.print(")");
+		} else {
+			writer.print(receiver.getClass().getSimpleName());
+		}
+		writer.println("***");
+	}
 }

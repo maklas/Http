@@ -24,6 +24,8 @@ public class ConnectionBuilder {
 	private Boolean followRedirect;
 	private Boolean useCache;
 	private byte[] output = null;
+	private String multipartBoundary = null;
+	private MultipartWriter multipartWriter = null;
 	private boolean built = false;
 	private CookieStore assignedCookieStore; //Cookie database that will be changed according to set-cookie header
 
@@ -51,6 +53,8 @@ public class ConnectionBuilder {
 			cb.output = new byte[output.length];
 			System.arraycopy(output, 0, cb.output, 0, output.length);
 		}
+		cb.multipartWriter = multipartWriter;
+		cb.multipartBoundary = multipartBoundary;
 		cb.assignedCookieStore = assignedCookieStore;
 	}
 
@@ -322,19 +326,35 @@ public class ConnectionBuilder {
 		return write(Header.ContentType.appXml, jsonString);
 	}
 
-	/** Specifies Content-Type as 'text/plain; charset=UTF-8' and writes xml to the output **/
+	/** Specifies Content-Type as 'text/plain; charset=UTF-8' and writes string to the output **/
 	public ConnectionBuilder writePlainText(String text) {
 		return write(Header.ContentType.textPlain, text);
 	}
 
-	/** Specifies Content-Type as 'text/plain; charset=UTF-8' and writes xml to the output **/
+	/** Specifies Content-Type as 'text/plain; charset=UTF-8' and writes hxml to the output **/
 	public ConnectionBuilder writeHtml(String html) {
 		return write(Header.ContentType.textHtml, html);
 	}
 
-	/** Specifies Content-Type as 'application/octet-stream' and writes xml to the output **/
+	/** Specifies Content-Type as 'application/octet-stream' and writes byte[] to the output **/
 	public ConnectionBuilder writeBinary(byte[] data) {
 		return write(Header.ContentType.octetStream, data);
+	}
+
+	/** Specifies Content-Type as multipart/form-data' and writes xml to the output **/
+	public ConnectionBuilder writeMultipartFormData(MultipartWriter mWriter) {
+		return writeMultipartFormData(null, mWriter);
+	}
+
+	/** Specifies Content-Type as multipart/form-data' and writes data to the output **/
+	public ConnectionBuilder writeMultipartFormData(@Nullable String boundary, MultipartWriter mWriter) {
+		if (mWriter == null) {
+			throw new RuntimeException("Multipart Writer must not be null");
+		}
+		this.multipartBoundary = boundary != null ? boundary : HttpUtils.generateMultipartBoundary();
+		this.multipartWriter = mWriter;
+		headers.addUnique(Header.ContentType.multipartFormData(HttpUtils.utf_8, multipartBoundary));
+		return this;
 	}
 
 	/**
@@ -397,11 +417,11 @@ public class ConnectionBuilder {
 		for (Header header : headers) {
 			javaCon.addRequestProperty(header.key, header.value);
 		}
-		if (output != null && !Http.GET.equals(method)) {
+		if ((multipartWriter != null || output != null) && !Http.GET.equals(method)) {
 			javaCon.setDoOutput(true);
 		}
 
-		return new Request(javaCon, url, method, output, headers, this);
+		return new Request(javaCon, url, method, output, multipartBoundary, multipartWriter, headers, this);
 	}
 
 	public FullResponse send() throws ConnectionException {
@@ -532,6 +552,14 @@ public class ConnectionBuilder {
 	@Nullable
 	byte[] getOutput() {
 		return output;
+	}
+
+	public String getMultipartBoundary() {
+		return multipartBoundary;
+	}
+
+	public MultipartWriter getMultipartWriter() {
+		return multipartWriter;
 	}
 
 	String getMethod() {

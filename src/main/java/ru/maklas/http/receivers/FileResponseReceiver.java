@@ -14,7 +14,7 @@ import java.io.InputStream;
 /** Simply Writes data to the specified file **/
 public class FileResponseReceiver implements ResponseReceiver {
 
-	private final File file;
+	public final File file;
 
 	public FileResponseReceiver(@NotNull File file) {
 		this.file = file;

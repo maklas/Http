@@ -244,9 +244,14 @@ public abstract class Response {
 				w.print("  ");
 				w.println(requestHeader);
 			}
-			if (!Http.GET.equalsIgnoreCase(getRequest().getBuilder().getMethod()) && getRequest().getOutput() != null) {
+			String outputAsString = getRequest().getOutputAsString();
+			boolean isGetRequest = Http.GET.equalsIgnoreCase(getRequest().getBuilder().getMethod());
+			if (!isGetRequest && outputAsString != null) {
 				w.println("Body:");
-				w.println(new String(getRequest().getOutput(), HttpUtils.utf_8));
+				w.println(outputAsString);
+			} else if (!isGetRequest && getRequest().getMultipartWriter() != null) {
+				w.println("Body:");
+				w.println(getRequest().getMultipartWriter().getTraceRepresentation(getRequest().getMultipartBoundary()));
 			}
 			w.println();
 			w.println("------- RESPONSE -------");

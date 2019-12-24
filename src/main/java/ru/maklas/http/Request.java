@@ -5,10 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import sun.net.www.MessageHeader;
 import sun.net.www.protocol.https.DelegateHttpsURLConnection;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -22,17 +19,21 @@ public class Request {
 	private final URL url;
 	private final String method;
 	private byte[] output;
+	private String multipartBoundary;
+	private final MultipartWriter multipartWriter;
 	private final HeaderList reqHeaders;
 	private final ConnectionBuilder builder;
 	/** Time when the Request was sent and HttpResponseCode received **/
 	long timeRequested;
 
 	/** Already connected! **/
-	Request(HttpURLConnection javaCon, URL url, String method, byte[] output, HeaderList reqHeaders, ConnectionBuilder builder) {
+	Request(HttpURLConnection javaCon, URL url, String method, byte[] output, String multipartBoundary, MultipartWriter multipartWriter, HeaderList reqHeaders, ConnectionBuilder builder) {
 		this.javaCon = javaCon;
 		this.url = url;
 		this.method = method;
 		this.output = output;
+		this.multipartBoundary = multipartBoundary;
+		this.multipartWriter = multipartWriter;
 		this.reqHeaders = reqHeaders;
 		this.builder = builder;
 	}
@@ -47,16 +48,28 @@ public class Request {
 		return output;
 	}
 
-	/** Data written to output **/
-	@Nullable
-	public String getOutputAsString() {
-		return output == null ? null : new String(output, HttpUtils.utf_8);
+	public String getMultipartBoundary() {
+		return multipartBoundary;
 	}
 
-	/** Data written to output **/
+	public MultipartWriter getMultipartWriter() {
+		return multipartWriter;
+	}
+
+	/** Data written to output, unless written with inputStream of MultipartWriter **/
 	@Nullable
-	public String getSendingBodyAsString() {
-		return output == null ? null : new String(output);
+	public String getOutputAsString() {
+		if (output != null) {
+			return new String(output, HttpUtils.utf_8);
+		}
+		if (multipartWriter != null && !multipartWriter.hasStream()) {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			try {
+				multipartWriter.encode(bos, getMultipartBoundary());
+				return new String(bos.toByteArray(), HttpUtils.utf_8);
+			} catch (IOException ignore) {}
+		}
+		return null;
 	}
 
 	public URL getRequestUrl() {
@@ -69,13 +82,13 @@ public class Request {
 
 	/** Use it to send data yourself. Throws exception if data was specified in ConnectionBuilder **/
 	public OutputStream getOutputStream() throws IOException {
-		if (output != null) throw new IOException("Output data was already send!!!");
+		if (output != null || multipartWriter != null) throw new IOException("Output data was already send!!!");
 		return javaCon.getOutputStream();
 	}
 
 	/** Use it to send data yourself. Throws exception if data was specified in ConnectionBuilder **/
 	public OutputStreamWriter getWriter() throws IOException {
-		if (output != null) throw new IOException("Output data was already send!!!");
+		if (output != null || multipartWriter != null) throw new IOException("Output data was already send!!!");
 		return new OutputStreamWriter(getOutputStream());
 	}
 
@@ -159,10 +172,15 @@ public class Request {
 	/** Returns time taken to connect **/
 	private long connect(HttpCallback callback) throws ConnectionException {
 		if (callback != null) callback.start(this);
-		if (output != null && !Http.GET.equals(method)) {
+
+		if ((output != null || multipartWriter != null) && !Http.GET.equals(method)) {
 			try {
-				DataOutputStream os = new DataOutputStream(javaCon.getOutputStream());
-				os.write(output);
+				OutputStream os = javaCon.getOutputStream();
+				if (output != null) {
+					os.write(output);
+				} else {
+					multipartWriter.encode(os, getMultipartBoundary());
+				}
 				os.flush();
 				os.close();
 				if (callback != null) callback.wroteBody();

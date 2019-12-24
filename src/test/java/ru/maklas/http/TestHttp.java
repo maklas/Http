@@ -275,19 +275,27 @@ public class TestHttp {
 
 	@Test
 	public void testFileUpload() throws Exception {
-		File uploadFile = new File(".\\src\\test\\resources\\uploadTestFile.png");
+		File uploadFile = new File(".\\src\\test\\resources\\uploadTestFile_РусТест.jpg");
+		File output = new File(".\\src\\test\\resources\\uploadTestFile_РусТест_response.jpg");
 		System.out.println(uploadFile.getAbsolutePath());
 		try (FileInputStream fis = new FileInputStream(uploadFile)) {
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			HttpUtils.copy(fis, bos, new byte[1024 * 8]);
 
-			FullResponse response = ConnectionBuilder
+			MultipartWriter mw = new MultipartWriter()
+					.add("do", "test")
+					.add("subdo", "file_upload")
+					.add("file_upload", fis, uploadFile.getName(), "image/jpeg")
+					.add("info", "on")
+					.add("http_submit", "Start HTTP upload");
+
+			Response response = ConnectionBuilder
 					.post("http://www.csm-testcenter.org/test")
 					.h(Header.AcceptEncoding.gzipDeflateBr)
-					.write(Header.ContentType.formData, bos.toByteArray())
-					.send();
+					.writeMultipartFormData(null, mw)
+					.build()
+					.send(new FileResponseReceiver(output));
 
 			System.out.println(response);
+			assertEquals(uploadFile.length(), output.length());
 		}
 	}
 }
