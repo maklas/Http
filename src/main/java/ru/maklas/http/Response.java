@@ -43,7 +43,7 @@ public abstract class Response {
 		} catch (Exception ignore) {
 		}
 		ResponseHeaders headers = getHeaders();
-		if (Http.generateCookieChanges && request.getBuilder().getAssignedCookieStore() != null) {
+		if (request.getBuilder().getAssignedCookieStore() != null) {
 			cookieChangeList = headers.updateCookiesIfChanged(javaCon.getURL(), request.getBuilder().getAssignedCookieStore());
 		}
 	}
