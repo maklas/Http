@@ -3,6 +3,7 @@ package ru.maklas.http;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Consumer;
 import com.badlogic.gdx.utils.Predicate;
+import org.jetbrains.annotations.Nullable;
 
 /** Change history of cookies after Http response. **/
 public class CookieChangeList {
@@ -120,5 +121,15 @@ public class CookieChangeList {
 			}
 		}
 		return false;
+	}
+
+	@Nullable
+	public CookieChange getChangeFor(String key) {
+		for (CookieChange cookieChange : changed) {
+			if (cookieChange.key.equalsIgnoreCase(key)) {
+				return cookieChange;
+			}
+		}
+		return null;
 	}
 }
