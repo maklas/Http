@@ -266,7 +266,7 @@ public class TestHttp {
 
 	@Test
 	public void testCookieStoreParse() {
-		CookieStore cs = CookieStore.parse(" key = value; OtherKey = ; ;=;s;json=%7B%22data%22%3A%5B100%2C%20%22abc%22%2C%20false%5D%2C%20%22key%22%3A%22Value%22%7D");
+		CookieStore cs = CookieStore.parse(" ' key = value; OtherKey = ; ;=;s;json=%7B%22data%22%3A%5B100%2C%20%22abc%22%2C%20false%5D%2C%20%22key%22%3A%22Value%22%7D'");
 		assertEquals(2, cs.size());
 		assertEquals("value", cs.getCookie("key"));
 		assertNull(cs.getCookie("OtherKey"));

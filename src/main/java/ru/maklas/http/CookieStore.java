@@ -49,6 +49,15 @@ public class CookieStore implements Iterable<Cookie> {
 		return null;
 	}
 
+	/** Adds a cookie even if it's already present **/
+	public void addCookie(Cookie cookie) {
+		if (Cookie.shouldBeDeleted(cookie.getValue())) {
+			remove(cookie.getKey());
+			return;
+		}
+		cookies.add(cookie);
+	}
+
 	@NotNull
 	@Override
 	public Iterator<Cookie> iterator() {
@@ -91,9 +100,7 @@ public class CookieStore implements Iterable<Cookie> {
 
 	public void addAll(Array<Cookie> cookies) {
 		for (Cookie cookie : cookies) {
-			if (!cookie.isDeleted()) {
-				this.cookies.add(new Cookie(cookie));
-			}
+			setCookie(cookie);
 		}
 	}
 
@@ -192,6 +199,15 @@ public class CookieStore implements Iterable<Cookie> {
 	}
 
 	public static CookieStore parse(String cookies, boolean decode) {
+		if (cookies != null) {
+			cookies = cookies.trim();
+			while (cookies.startsWith("'")) {
+				cookies = cookies.substring(1);
+			}
+			while (cookies.endsWith("'")) {
+				cookies = cookies.substring(0, cookies.length() - 1);
+			}
+		}
 		CookieStore store = new CookieStore();
 		if (StringUtils.isEmpty(cookies)) {
 			return store;
