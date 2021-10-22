@@ -129,15 +129,6 @@ public abstract class Response {
 		if (getResponseCode() == 200) {
 			return false;
 		}
-		Header locationHeader = getHeaders().getHeader(Header.Location.key);
-		if (locationHeader != null) {
-			try {
-				new URL(locationHeader.value);
-			} catch (MalformedURLException e) {
-				return false;
-			}
-			return true;
-		}
 
 		int[] redirectionCodes = {301, 302, 303, 307, 308};
 		for (int redirectionCode : redirectionCodes) {
@@ -146,7 +137,7 @@ public abstract class Response {
 			}
 		}
 
-		return false;
+		return StringUtils.isNotEmpty(getHeaders().getHeaderValue(Header.Location.key));
 	}
 
 	/** Redirection URL. Might be null if not found. **/

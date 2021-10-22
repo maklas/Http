@@ -1,6 +1,7 @@
 package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
@@ -55,10 +56,12 @@ public class HeaderList implements Iterable<Header> {
 	}
 
 	/** Doesn't care about upper/lower case **/
+	@Nullable
 	public Header getHeader(String key) {
 		return getHeader(key, false);
 	}
 
+	@Nullable
 	public Header getHeader(String key, boolean caseSensitive) {
 		for (Header header : headers) {
 			if (equals(key, header.key, caseSensitive)) {
@@ -69,10 +72,12 @@ public class HeaderList implements Iterable<Header> {
 	}
 
 	/** Doesn't care about upper/lower case **/
+	@Nullable
 	public String getHeaderValue(String key) {
 		return getHeaderValue(key, false);
 	}
 
+	@Nullable
 	public String getHeaderValue(String key, boolean caseSensitive) {
 		for (Header header : headers) {
 			if (equals(key, header.key, caseSensitive)) {
