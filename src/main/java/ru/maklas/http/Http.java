@@ -1,8 +1,9 @@
 package ru.maklas.http;
 
-import com.badlogic.gdx.utils.MapFunction;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Function;
 
 public class Http {
 
@@ -87,7 +88,7 @@ public class Http {
 	}
 
 	/** Function that's used to encode queries and outputs **/
-	public static void setDefaultUriEncodingFunction(@MagicConstant(valuesFromClass = UrlEncoder.class) MapFunction<String, String> encFunc) {
+	public static void setDefaultUriEncodingFunction(@MagicConstant(valuesFromClass = UrlEncoder.class) Function<String, String> encFunc) {
 		UrlEncoder.defaultEncoding = encFunc;
 	}
 

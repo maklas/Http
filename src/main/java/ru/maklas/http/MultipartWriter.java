@@ -2,7 +2,9 @@ package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MultipartWriter {
 

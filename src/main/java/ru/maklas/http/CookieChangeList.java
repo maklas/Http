@@ -1,9 +1,10 @@
 package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Consumer;
 import com.badlogic.gdx.utils.Predicate;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 /** Change history of cookies after Http response. **/
 public class CookieChangeList {

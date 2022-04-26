@@ -1,7 +1,6 @@
 package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Consumer;
 import com.badlogic.gdx.utils.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 /** Storage for cookies. Stores cookies and manages cookie changes **/
 public class CookieStore implements Iterable<Cookie> {

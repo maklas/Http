@@ -1,22 +1,22 @@
 package ru.maklas.http;
 
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.MapFunction;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.function.Function;
 
 /** Encoder used to encode query parameters for GET in address bar and POST in request body **/
 public class UrlEncoder {
 
-	public static final MapFunction<String, String> javaUrl = UrlEncoder::encodeJavaUrl;
-	public static final MapFunction<String, String> jsUri = UrlEncoder::encodeURIComponent;
-	public static final MapFunction<String, String> jsUriAndPlus = UrlEncoder::encodeURIComponentPlus;
-	public static MapFunction<String, String> defaultEncoding = javaUrl;
+	public static final Function<String, String> javaUrl = UrlEncoder::encodeJavaUrl;
+	public static final Function<String, String> jsUri = UrlEncoder::encodeURIComponent;
+	public static final Function<String, String> jsUriAndPlus = UrlEncoder::encodeURIComponentPlus;
+	public static Function<String, String> defaultEncoding = javaUrl;
 
 	private Array<KeyValuePair> pairs = new Array<>();
-	private MapFunction<String, String> encodingFunction = defaultEncoding;
+	private Function<String, String> encodingFunction = defaultEncoding;
 
 	public UrlEncoder add(String key, Object value) {
 		pairs.add(new KeyValuePair(key, value != null ? String.valueOf(value) : ""));
@@ -44,13 +44,13 @@ public class UrlEncoder {
 
 	public String encode() {
 		if (pairs.size == 0) return "";
-		MapFunction<String, String> encodingFunction = this.encodingFunction;
+		Function<String, String> encodingFunction = this.encodingFunction;
 		StringBuilder builder = new StringBuilder();
 
 		for (KeyValuePair pair : pairs) {
-			builder.append(encodingFunction.map(pair.key))
+			builder.append(encodingFunction.apply(pair.key))
 					.append("=")
-					.append(encodingFunction.map(pair.value))
+					.append(encodingFunction.apply(pair.value))
 					.append("&");
 		}
 		builder.setLength(builder.length() - 1);
